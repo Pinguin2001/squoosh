@@ -1,10 +1,17 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
-#include "lib/jxl/base/thread_pool_internal.h"
-#include "lib/jxl/enc_external_image.h"
-#include "lib/jxl/enc_file.h"
-#include "lib/jxl/enc_color_management.h"
+#include <jxl/encode.h>
+#include <jxl/encode_cxx.h>
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
+#ifdef __EMSCRIPTEN_PTHREADS__
+#include <jxl/thread_parallel_runner.h>
+#include <jxl/thread_parallel_runner_cxx.h>
+#endif
 
 using namespace emscripten;
 
@@ -21,95 +28,107 @@ struct JXLOptions {
   bool lossyModular;
 };
 
+// Quality settings roughly match libjpeg qualities.
+float distanceFromQuality(float quality) {
+  float distance =
+      quality >= 30 ? 0.1 + (100 - quality) * 0.09 : 6.4 + pow(2.5, (30 - quality) / 5.0f) / 6.25f;
+  // The largest distance libjxl accepts.
+  return std::min(distance, 25.0f);
+}
+
 val encode(std::string image, int width, int height, JXLOptions options) {
-  jxl::CompressParams cparams;
-  jxl::PassesEncoderState passes_enc_state;
-  jxl::CodecInOut io;
-  jxl::PaddedBytes bytes;
-  jxl::ImageBundle* main = &io.Main();
-  jxl::ThreadPoolInternal* pool_ptr = nullptr;
+  auto encoder = JxlEncoderMake(/*memory_manager=*/nullptr);
+  if (!encoder)
+    return val::null();
+  JxlEncoder* enc = encoder.get();
+
 #ifdef __EMSCRIPTEN_PTHREADS__
-  jxl::ThreadPoolInternal pool;
-  pool_ptr = &pool;
+  auto runner = JxlThreadParallelRunnerMake(/*memory_manager=*/nullptr,
+                                            JxlThreadParallelRunnerDefaultNumWorkerThreads());
+  if (JxlEncoderSetParallelRunner(enc, JxlThreadParallelRunner, runner.get()) != JXL_ENC_SUCCESS) {
+    return val::null();
+  }
 #endif
 
-  size_t st = 10 - options.effort;
-  cparams.speed_tier = jxl::SpeedTier(st);
+  bool lossless = options.quality == 100;
 
-  cparams.epf = options.epf;
-  cparams.decoding_speed_tier = options.decodingSpeedTier;
-  cparams.photon_noise_iso = options.photonNoiseIso;
+  JxlBasicInfo info;
+  JxlEncoderInitBasicInfo(&info);
+  info.xsize = width;
+  info.ysize = height;
+  info.bits_per_sample = 8;
+  info.num_extra_channels = 1;
+  info.alpha_bits = 8;
+  // Lossless keeps the original colours; lossy encodes in XYB.
+  info.uses_original_profile = lossless ? JXL_TRUE : JXL_FALSE;
+  if (JxlEncoderSetBasicInfo(enc, &info) != JXL_ENC_SUCCESS)
+    return val::null();
+
+  JxlColorEncoding color;
+  JxlColorEncodingSetToSRGB(&color, /*is_gray=*/JXL_FALSE);
+  if (JxlEncoderSetColorEncoding(enc, &color) != JXL_ENC_SUCCESS)
+    return val::null();
+
+  JxlEncoderFrameSettings* settings = JxlEncoderFrameSettingsCreate(enc, nullptr);
+  auto set = [settings](JxlEncoderFrameSettingId id, int64_t value) {
+    return JxlEncoderFrameSettingsSetOption(settings, id, value) == JXL_ENC_SUCCESS;
+  };
+
+  bool ok = set(JXL_ENC_FRAME_SETTING_EFFORT, options.effort) &&
+            set(JXL_ENC_FRAME_SETTING_EPF, options.epf) &&
+            set(JXL_ENC_FRAME_SETTING_DECODING_SPEED, options.decodingSpeedTier) &&
+            JxlEncoderFrameSettingsSetFloatOption(settings, JXL_ENC_FRAME_SETTING_PHOTON_NOISE,
+                                                  options.photonNoiseIso) == JXL_ENC_SUCCESS;
+
+  bool modular = lossless || options.lossyModular;
+  if (lossless) {
+    ok = ok && JxlEncoderSetFrameLossless(settings, JXL_TRUE) == JXL_ENC_SUCCESS;
+  } else {
+    ok = ok && JxlEncoderSetFrameDistance(settings, distanceFromQuality(options.quality)) ==
+                   JXL_ENC_SUCCESS;
+  }
+  ok = ok && set(JXL_ENC_FRAME_SETTING_MODULAR, modular ? 1 : 0);
 
   if (options.lossyPalette) {
-    cparams.lossy_palette = true;
-    cparams.palette_colors = 0;
-    cparams.options.predictor = jxl::Predictor::Zero;
-    // Near-lossless assumes -R 0
-    cparams.responsive = 0;
-    cparams.modular_mode = true;
-  }
-
-  float quality = options.quality;
-
-  // Quality settings roughly match libjpeg qualities.
-  if (options.lossyModular || quality == 100) {
-    cparams.modular_mode = true;
-    // Internal modular quality to roughly match VarDCT size.
-    if (quality < 7) {
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          std::min(35 + (quality - 7) * 3.0f, 100.0f);
-    } else {
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          std::min(35 + (quality - 7) * 65.f / 93.f, 100.0f);
-    }
-  } else {
-    cparams.modular_mode = false;
-    if (quality >= 30) {
-      cparams.butteraugli_distance = 0.1 + (100 - quality) * 0.09;
-    } else {
-      cparams.butteraugli_distance = 6.4 + pow(2.5, (30 - quality) / 5.0f) / 6.25f;
-    }
+    // Near-lossless palette, which assumes no responsive mode.
+    ok = ok && set(JXL_ENC_FRAME_SETTING_LOSSY_PALETTE, 1) &&
+         set(JXL_ENC_FRAME_SETTING_PALETTE_COLORS, 0) &&
+         set(JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR, 0) &&
+         set(JXL_ENC_FRAME_SETTING_RESPONSIVE, 0);
   }
 
   if (options.progressive) {
-    cparams.qprogressive_mode = true;
-    cparams.responsive = 1;
-    if (!cparams.modular_mode) {
-      cparams.progressive_dc = 1;
+    ok = ok && set(JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC, 1) &&
+         set(JXL_ENC_FRAME_SETTING_RESPONSIVE, 1);
+    if (!modular) {
+      ok = ok && set(JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, 1);
     }
   }
+  if (!ok)
+    return val::null();
 
-  if (cparams.modular_mode) {
-    if (cparams.quality_pair.first != 100 || cparams.quality_pair.second != 100) {
-      cparams.color_transform = jxl::ColorTransform::kXYB;
-    } else {
-      cparams.color_transform = jxl::ColorTransform::kNone;
-    }
-  }
-
-  io.metadata.m.SetAlphaBits(8);
-  if (!io.metadata.size.Set(width, height)) {
+  JxlPixelFormat format = {4, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
+  if (JxlEncoderAddImageFrame(settings, &format, image.data(), image.size()) != JXL_ENC_SUCCESS) {
     return val::null();
   }
+  JxlEncoderCloseInput(enc);
 
-  uint8_t* inBuffer = (uint8_t*)image.c_str();
-
-  auto result = jxl::ConvertFromExternal(
-      jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
-      height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN,
-      /*flipped_y=*/false, pool_ptr, main, /*(only true if bits_per_sample==32) float_in=*/false);
-
-  if (!result) {
+  std::vector<uint8_t> output(64 * 1024);
+  uint8_t* next_out = output.data();
+  size_t avail_out = output.size();
+  JxlEncoderStatus status;
+  while ((status = JxlEncoderProcessOutput(enc, &next_out, &avail_out)) ==
+         JXL_ENC_NEED_MORE_OUTPUT) {
+    size_t offset = next_out - output.data();
+    output.resize(output.size() * 2);
+    next_out = output.data() + offset;
+    avail_out = output.size() - offset;
+  }
+  if (status != JXL_ENC_SUCCESS)
     return val::null();
-  }
+  output.resize(next_out - output.data());
 
-  auto js_result = val::null();
-  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes, jxl::GetJxlCms(), /*aux=*/nullptr, pool_ptr)) {
-    js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
-  }
-
-  return js_result;
+  return Uint8Array.new_(typed_memory_view(output.size(), output.data()));
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
