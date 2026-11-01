@@ -2,8 +2,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
-import { DownloadIcon, ExpandIcon } from '@/components/icons';
+import Menu from '@/components/controls/Menu.vue';
+import { DataObjectIcon, DownloadIcon, ExpandIcon } from '@/components/icons';
 import type { SourceImage } from '@/composables/useCompressor';
+import { showSnack } from '@/composables/useSnackbar';
+import { fileToBase64 } from '@/lib/base64';
 import prettyBytes from '@/lib/pretty-bytes';
 
 const props = defineProps<{
@@ -52,6 +55,38 @@ const diff = computed(
     props.imageFile.size / props.source.file.size,
 );
 
+const copyMenuOpen = ref(false);
+const copyItems = [
+  { value: 'dataUrl', label: 'Copy as data URL' },
+  { value: 'base64', label: 'Copy as base64' },
+] as const;
+
+async function onCopy(kind: (typeof copyItems)[number]['value']) {
+  const file = props.imageFile;
+  if (!file) return;
+  const text = fileToBase64(file).then((encoded) => encoded[kind]);
+  try {
+    // A promise keeps the click as the user gesture in Safari while the
+    // file is read.
+    if (typeof ClipboardItem === 'undefined') {
+      await navigator.clipboard.writeText(await text);
+    } else {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/plain': text.then((t) => new Blob([t], { type: 'text/plain' })),
+        }),
+      ]);
+    }
+    const size = prettyBytes((await text).length);
+    showSnack(
+      `Copied ${size.value} ${size.unit} of ${kind === 'dataUrl' ? 'data URL' : 'base64'}`,
+      { timeout: 3000 },
+    );
+  } catch {
+    showSnack("Couldn't copy to the clipboard");
+  }
+}
+
 const percent = computed(() => {
   if (diff.value === undefined) return undefined;
   const absolutePercent = Math.round(Math.abs(diff.value) * 100);
@@ -87,6 +122,25 @@ const percent = computed(() => {
         <span class="percent-char">%</span>
       </div>
     </div>
+    <div class="copy">
+      <button
+        class="unbutton copy-btn"
+        title="Copy as base64"
+        aria-haspopup="menu"
+        :aria-expanded="copyMenuOpen"
+        :disabled="showLoadingState || !imageFile"
+        @click="copyMenuOpen = !copyMenuOpen"
+      >
+        <DataObjectIcon />
+      </button>
+      <Menu
+        v-model:open="copyMenuOpen"
+        :items="copyItems"
+        placement="above"
+        :align="flipSide ? 'end' : 'start'"
+        @select="onCopy"
+      />
+    </div>
     <a
       :class="['download', { 'download-disable': showLoadingState }]"
       :href="downloadUrl"
@@ -106,7 +160,7 @@ const percent = computed(() => {
 .results {
   --fab-size: 56px;
   display: grid;
-  grid-template-columns: [arrow] auto [bubble] 1fr [download] auto;
+  grid-template-columns: [arrow] auto [bubble] 1fr [copy] auto [download] auto;
   align-items: center;
   gap: 8px;
   padding: 6px 6px 6px 12px;
@@ -117,9 +171,9 @@ const percent = computed(() => {
 
   @media (min-width: 600px) {
     --fab-size: 72px;
-    grid-template-columns: [download] auto [bubble] 1fr;
+    grid-template-columns: [download] auto [copy] auto [bubble] 1fr;
     gap: 14px;
-    padding: 10px 20px 10px 10px;
+    padding: 10px 16px 10px 10px;
     background: var(--md-sys-color-surface-container-low);
   }
 }
@@ -208,7 +262,7 @@ const percent = computed(() => {
   transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
 
   @media (min-width: 600px) {
-    padding: 6px 14px;
+    padding: 6px 10px;
     font: var(--md-sys-typescale-title-large);
     font-weight: var(--md-sys-typescale-emphasized-weight);
   }
@@ -221,6 +275,58 @@ const percent = computed(() => {
 .percent-char {
   font-size: 0.75em;
   opacity: 0.8;
+}
+
+/* Small tonal button for copying the file as base64 */
+.copy {
+  position: relative;
+  grid-row: 1;
+  grid-column: copy;
+
+  /* Sit closer to the download button than the grid gap. */
+  @media (min-width: 600px) {
+    margin-left: -8px;
+
+    .results-right & {
+      margin: 0 -8px 0 0;
+    }
+  }
+}
+
+.copy-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--side-container);
+  color: var(--side-on-container);
+  transition-property: border-radius, scale, opacity;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+
+  &:hover {
+    border-radius: var(--md-sys-shape-corner-medium);
+  }
+
+  &:active {
+    scale: 0.92;
+  }
+
+  &:disabled {
+    opacity: 0.38;
+    pointer-events: none;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.is-original .copy-btn {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
 }
 
 /* Download FAB in the "cookie" shape */
@@ -296,8 +402,8 @@ const percent = computed(() => {
 
 .results-right {
   @media (min-width: 600px) {
-    grid-template-columns: [bubble] 1fr [download] auto;
-    padding: 10px 10px 10px 20px;
+    grid-template-columns: [bubble] 1fr [copy] auto [download] auto;
+    padding: 10px 10px 10px 16px;
 
     .bubble {
       flex-direction: row-reverse;

@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import SnackBar from '@/components/SnackBar.vue';
 import IntroPage from '@/components/intro/IntroPage.vue';
 import { showSnack } from '@/composables/useSnackbar';
+import { base64ToFile, maybeBase64Image } from '@/lib/base64';
 import {
   getSharedImage,
   isShareTarget,
@@ -93,9 +94,23 @@ function onDrop(event: DragEvent) {
   if (droppedFile) openFile(droppedFile);
 }
 
-function onPaste(event: ClipboardEvent) {
+async function onPaste(event: ClipboardEvent) {
   const pastedFile = firstFile(event.clipboardData);
-  if (pastedFile) openFile(pastedFile);
+  if (pastedFile) {
+    openFile(pastedFile);
+    return;
+  }
+
+  // A data URL or base64 image, unless it's being pasted into a text field.
+  const target = event.target as HTMLElement;
+  if (target.closest('input, textarea, [contenteditable]')) return;
+  const text = event.clipboardData?.getData('text/plain') ?? '';
+  if (!maybeBase64Image(text)) return;
+  try {
+    openFile(await base64ToFile(text));
+  } catch {
+    showSnack("The pasted text isn't a base64 image SquooshRE can open");
+  }
 }
 
 // Since iOS 10, Apple tries to prevent disabling pinch-zoom. This is great in

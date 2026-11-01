@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import Menu from '@/components/controls/Menu.vue';
+import { ExpandIcon } from '@/components/icons';
 import { showSnack } from '@/composables/useSnackbar';
+import Base64Dialog from './Base64Dialog.vue';
 import SlideOnScroll from './SlideOnScroll.vue';
 import { startBlobs } from './blob-anim/meta';
 import githubLogo from './imgs/github-logo.svg';
@@ -81,6 +84,8 @@ const blobPaths = startBlobs.map((points) =>
 );
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
+const base64Dialog =
+  useTemplateRef<InstanceType<typeof Base64Dialog>>('base64Dialog');
 const blobCanvas = useTemplateRef<HTMLCanvasElement>('blobCanvas');
 const loadImg = useTemplateRef<HTMLElement>('loadImg');
 
@@ -88,6 +93,17 @@ const fetchingDemoIndex = ref<number>();
 const beforeInstallEvent = ref<BeforeInstallPromptEvent>();
 /** The static blobs show until the animated ones take over. */
 const showBlobSVG = ref(true);
+const importMenuOpen = ref(false);
+
+const importMenuItems = [
+  { value: 'file', label: 'Open file…' },
+  { value: 'base64', label: 'Paste base64…' },
+] as const;
+
+function onImportMenuSelect(value: (typeof importMenuItems)[number]['value']) {
+  if (value === 'file') fileInput.value!.click();
+  else base64Dialog.value!.show();
+}
 
 function onBeforeInstallPrompt(event: BeforeInstallPromptEvent) {
   // Don't show the mini-infobar on mobile
@@ -188,14 +204,31 @@ async function onPasteClick() {
           <path v-for="(d, i) in blobPaths" :key="i" :d="d" />
         </svg>
         <div class="load-img-content">
-          <button class="unbutton load-btn" @click="fileInput!.click()">
-            <svg viewBox="0 0 24 24" class="load-icon" aria-hidden="true">
-              <path
-                d="M19 7v3h-2V7h-3V5h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5a2 2 0 00-2 2v12c0 1.1.9 2 2 2h12a2 2 0 002-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"
-              />
-            </svg>
-            Choose image
-          </button>
+          <div :class="['load-split', { 'menu-open': importMenuOpen }]">
+            <button class="unbutton load-btn" @click="fileInput!.click()">
+              <svg viewBox="0 0 24 24" class="load-icon" aria-hidden="true">
+                <path
+                  d="M19 7v3h-2V7h-3V5h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5a2 2 0 00-2 2v12c0 1.1.9 2 2 2h12a2 2 0 002-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"
+                />
+              </svg>
+              Choose image
+            </button>
+            <button
+              class="unbutton load-menu-btn"
+              aria-label="More ways to open an image"
+              aria-haspopup="menu"
+              :aria-expanded="importMenuOpen"
+              @click="importMenuOpen = !importMenuOpen"
+            >
+              <ExpandIcon />
+            </button>
+            <Menu
+              v-model:open="importMenuOpen"
+              :items="importMenuItems"
+              align="end"
+              @select="onImportMenuSelect"
+            />
+          </div>
           <div class="load-hint">
             <span class="drop-text">Drop </span>OR
             <button
@@ -329,6 +362,7 @@ async function onPasteClick() {
         </div>
       </div>
     </footer>
+    <Base64Dialog ref="base64Dialog" @file="emit('file', $event)" />
     <button
       v-if="beforeInstallEvent"
       class="unbutton install-btn"
@@ -421,36 +455,82 @@ async function onPasteClick() {
   }
 }
 
-/* Large extended FAB */
-.load-btn {
+/* Large split button: "Choose image" plus a menu of other ways to open one */
+.load-split {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 80px;
-  padding: 0 32px 0 26px;
+  gap: 2px;
   border-radius: var(--md-sys-shape-corner-large-increased);
+  box-shadow: var(--md-sys-elevation-3);
+}
+
+.load-btn,
+.load-menu-btn {
+  height: 80px;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
-  box-shadow: var(--md-sys-elevation-3);
-  font: var(--md-sys-typescale-title-large);
-  font-weight: var(--md-sys-typescale-emphasized-weight);
   transition-property: border-radius, scale, box-shadow;
   transition-duration: var(--md-sys-motion-spring-default-spatial-duration);
   transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
 
+  &:focus-visible {
+    outline-offset: 4px;
+  }
+}
+
+.load-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 28px 0 26px;
+  border-radius: var(--md-sys-shape-corner-large-increased)
+    var(--md-sys-shape-corner-small) var(--md-sys-shape-corner-small)
+    var(--md-sys-shape-corner-large-increased);
+  font: var(--md-sys-typescale-title-large);
+  font-weight: var(--md-sys-typescale-emphasized-weight);
+
   &:hover {
-    border-radius: 40px;
-    scale: 1.04;
+    border-radius: 40px var(--md-sys-shape-corner-medium)
+      var(--md-sys-shape-corner-medium) 40px;
   }
 
   &:active {
     border-radius: var(--md-sys-shape-corner-medium);
     scale: 0.97;
-    box-shadow: var(--md-sys-elevation-2);
+  }
+}
+
+.load-menu-btn {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  border-radius: var(--md-sys-shape-corner-small)
+    var(--md-sys-shape-corner-large-increased)
+    var(--md-sys-shape-corner-large-increased) var(--md-sys-shape-corner-small);
+
+  svg {
+    width: 32px;
+    height: 32px;
+    transition: rotate var(--md-sys-motion-spring-fast-spatial-duration)
+      var(--md-sys-motion-spring-fast-spatial);
   }
 
-  &:focus-visible {
-    outline-offset: 4px;
+  &:hover {
+    border-radius: var(--md-sys-shape-corner-medium) 40px 40px
+      var(--md-sys-shape-corner-medium);
+  }
+
+  &:active {
+    scale: 0.94;
+  }
+
+  /* While its menu is open, the trailing button turns fully round. */
+  .menu-open & {
+    border-radius: 40px;
+
+    svg {
+      rotate: 180deg;
+    }
   }
 }
 
