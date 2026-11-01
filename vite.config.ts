@@ -29,6 +29,9 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       injectManifest: {
+        // The plugin's 'es' build sets Rolldown's deprecated
+        // inlineDynamicImports; the service worker is one file either way.
+        rollupFormat: 'iife',
         globPatterns: ['**/*.{html,js,css,wasm,svg,png,jpg,ico,woff2}'],
         // Demo images are cached when used rather than up front.
         globIgnores: ['**/demo-*', 'screenshots/**'],
