@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { VitePWA } from 'vite-plugin-pwa';
+import { VitePWA, type ManifestOptions } from 'vite-plugin-pwa';
 
 // Multithreaded codecs need SharedArrayBuffer, which needs cross-origin isolation.
 // Production hosting sends the same headers via public/_headers.
@@ -19,9 +19,65 @@ const screenshot = (src: string, sizes: string) => ({
     : ('wide' as const),
 });
 
+const manifest: Partial<ManifestOptions> = {
+  name: 'SquooshRE',
+  short_name: 'SquooshRE',
+  description:
+    'Compress and compare images with different codecs, right in your browser.',
+  start_url: '/?utm_medium=PWA&utm_source=launcher',
+  scope: '/',
+  display: 'standalone',
+  orientation: 'any',
+  background_color: '#fff',
+  theme_color: '#ff3385',
+  lang: 'en',
+  categories: ['photo', 'productivity', 'utilities'],
+  icons: [
+    { src: '/icon-small.png', sizes: '192x192', type: 'image/png' },
+    { src: '/icon-large.png', sizes: '1024x1024', type: 'image/png' },
+    {
+      src: '/icon-large-maskable.png',
+      sizes: '1024x1024',
+      type: 'image/png',
+      purpose: 'maskable',
+    },
+  ],
+  screenshots: [
+    screenshot('screenshot1.png', '540x720'),
+    screenshot('screenshot2.jpg', '540x720'),
+    screenshot('screenshot3.jpg', '540x720'),
+    screenshot('screenshot4.png', '1024x593'),
+    screenshot('screenshot5.jpg', '1024x593'),
+    screenshot('screenshot6.jpg', '1024x593'),
+  ],
+  share_target: {
+    action: '/?utm_medium=PWA&utm_source=share-target&share-target',
+    method: 'POST',
+    enctype: 'multipart/form-data',
+    params: { files: [{ name: 'file', accept: ['image/*'] }] },
+  },
+};
+
+/**
+ * vite-plugin-pwa only serves the web manifest in dev together with a dev
+ * service worker, which we don't want; without this the URL falls back to
+ * index.html.
+ */
+const devManifest: Plugin = {
+  name: 'squooshre-dev-manifest',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use('/manifest.webmanifest', (_req, res) => {
+      res.setHeader('Content-Type', 'application/manifest+json');
+      res.end(JSON.stringify(manifest));
+    });
+  },
+};
+
 export default defineConfig({
   plugins: [
     vue(),
+    devManifest,
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
@@ -38,43 +94,7 @@ export default defineConfig({
         // The largest codec is about 3MB.
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
       },
-      manifest: {
-        name: 'SquooshRE',
-        short_name: 'SquooshRE',
-        description:
-          'Compress and compare images with different codecs, right in your browser.',
-        start_url: '/?utm_medium=PWA&utm_source=launcher',
-        display: 'standalone',
-        orientation: 'any',
-        background_color: '#fff',
-        theme_color: '#ff3385',
-        lang: 'en',
-        categories: ['photo', 'productivity', 'utilities'],
-        icons: [
-          { src: '/icon-small.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-large.png', sizes: '1024x1024', type: 'image/png' },
-          {
-            src: '/icon-large-maskable.png',
-            sizes: '1024x1024',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-        ],
-        screenshots: [
-          screenshot('screenshot1.png', '540x720'),
-          screenshot('screenshot2.jpg', '540x720'),
-          screenshot('screenshot3.jpg', '540x720'),
-          screenshot('screenshot4.png', '1024x593'),
-          screenshot('screenshot5.jpg', '1024x593'),
-          screenshot('screenshot6.jpg', '1024x593'),
-        ],
-        share_target: {
-          action: '/?utm_medium=PWA&utm_source=share-target&share-target',
-          method: 'POST',
-          enctype: 'multipart/form-data',
-          params: { files: [{ name: 'file', accept: ['image/*'] }] },
-        },
-      },
+      manifest,
     }),
   ],
   resolve: {
