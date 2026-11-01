@@ -88,6 +88,7 @@ function onPointerDown(event: PointerEvent) {
         :class="['range-input', { disabled }]"
         :style="{
           '--value-percent': percent + '%',
+          '--value-fraction': percent / 100,
           '--value-width': displayValue.length,
         }"
         @pointerdown="onPointerDown"
@@ -105,14 +106,7 @@ function onPointerDown(event: PointerEvent) {
         />
         <div class="thumb-wrapper">
           <div class="thumb"></div>
-          <div class="value-display">
-            <svg width="32" height="62">
-              <path
-                d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"
-              />
-            </svg>
-            <span>{{ displayValue }}</span>
-          </div>
+          <div class="value-display">{{ displayValue }}</div>
         </div>
       </div>
     </div>
@@ -132,15 +126,22 @@ function onPointerDown(event: PointerEvent) {
 </template>
 
 <style scoped>
+/* Material 3 Expressive slider: thick track with a gap around a bar handle,
+   a stop indicator at the end, and a value indicator while in use. */
 .range {
+  --accent: var(--side-accent, var(--md-sys-color-primary));
+  --inactive: var(--side-container, var(--md-sys-color-secondary-container));
+  --handle-gap: 6px;
   position: relative;
   z-index: 0;
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
+  row-gap: 2px;
 }
 
 .label-text {
-  color: #fff; /* TEMP */
+  color: var(--md-sys-color-on-surface);
 }
 
 .range-wc-container {
@@ -154,24 +155,28 @@ function onPointerDown(event: PointerEvent) {
   grid-row: 1 / 2;
   grid-column: 2 / 3;
 
-  text-align: right;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  border: none;
-  padding: 2px 5px;
   box-sizing: border-box;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-decoration-color: var(--main-theme-color);
-  text-underline-position: under;
-  width: 54px;
-  position: relative;
-  left: 5px;
+  width: 64px;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  font: var(--md-sys-typescale-label-large);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  transition: border-radius var(--md-sys-motion-spring-fast-spatial-duration)
+    var(--md-sys-motion-spring-fast-spatial);
 
   &:focus {
-    background: #fff;
-    color: #000;
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-radius: var(--md-sys-shape-corner-medium);
+  }
+
+  &:disabled {
+    opacity: 0.38;
   }
 
   /* Remove the number controls */
@@ -186,112 +191,144 @@ function onPointerDown(event: PointerEvent) {
 }
 
 .range-input {
+  /* Handle centre, in px from the left. The native thumb below is 16px wide,
+     so this matches where the browser maps the pointer. */
+  --handle-x: calc(8px + (100% - 16px) * var(--value-fraction, 0));
   position: relative;
   display: flex;
-  height: 18px;
+  height: 44px;
   width: 100%;
-  margin: 2px;
-  font: inherit;
-  line-height: 16px;
   overflow: visible;
 }
 
-/* Disabled inputs are greyed out */
 .range-input.disabled {
+  opacity: 0.38;
   filter: grayscale(1);
 }
 
-.range-input::before {
+/* Active track */
+.range-input::before,
+/* Inactive track, with the stop indicator */
+.range-input::after {
   content: '';
-  display: block;
   position: absolute;
-  top: 8px;
+  top: 14px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.range-input::before {
   left: 0;
-  width: 100%;
-  height: 2px;
-  border-radius: 1px;
-  background: linear-gradient(var(--main-theme-color), var(--main-theme-color))
-    0 / var(--value-percent, 0%) 100% no-repeat var(--medium-light-gray);
+  width: max(0px, calc(var(--handle-x) - var(--handle-gap)));
+  border-radius: 8px 2px 2px 8px;
+  background: var(--accent);
+}
+
+.range-input::after {
+  left: calc(var(--handle-x) + var(--handle-gap));
+  right: 0;
+  border-radius: 2px 8px 8px 2px;
+  background:
+    radial-gradient(
+      circle at calc(100% - 8px) 50%,
+      var(--accent) 2px,
+      transparent 2.5px
+    ),
+    var(--inactive);
 }
 
 .input {
   position: relative;
   width: 100%;
+  height: 100%;
   padding: 0;
   margin: 0;
   opacity: 0;
-}
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  cursor: pointer;
 
-.thumb {
-  pointer-events: none;
-  position: absolute;
-  bottom: 3px;
-  left: 0;
-  margin-left: -6px;
-  background: var(--main-theme-color);
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-}
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 44px;
+  }
 
-.range-input:focus-within .thumb {
-  outline: white solid 2px;
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 44px;
+    border: none;
+  }
 }
 
 .thumb-wrapper {
   position: absolute;
-  left: 6px;
-  right: 6px;
-  bottom: 0;
-  height: 0;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  height: 100%;
   overflow: visible;
+  pointer-events: none;
   transform: translate(var(--value-percent, 0%), 0);
+}
+
+.thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 44px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transition-property: width, margin-left;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+}
+
+.range-input:has(:focus-visible) .thumb {
+  outline: 3px solid var(--md-sys-color-secondary);
+  outline-offset: 2px;
 }
 
 .value-display {
   position: absolute;
-  box-sizing: border-box;
   left: 0;
-  bottom: 3px;
-  width: 32px;
-  height: 62px;
-  text-align: center;
-  padding: 8px 3px 0;
-  margin: 0 0 0 -16px;
-  transform-origin: 50% 90%;
-  opacity: 0.0001;
-  transform: scale(0.2);
-  color: #fff;
-  font: inherit;
-  font-size: calc(100% - var(--value-width, 3) / 5 * 0.2em);
-  text-overflow: clip;
-  text-shadow: 0 -0.5px 0 rgba(0, 0, 0, 0.4);
-  transition: all 200ms ease;
+  bottom: calc(100% + 4px);
+  box-sizing: border-box;
+  min-width: 48px;
+  height: 44px;
+  padding: 0 16px;
+  display: grid;
+  place-items: center;
+  transform: translateX(-50%) scale(0.4);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-inverse-surface);
+  color: var(--md-sys-color-inverse-on-surface);
+  font: var(--md-sys-typescale-label-large);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   transition-property: opacity, transform;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
   will-change: transform;
   pointer-events: none;
-  overflow: hidden;
+}
 
-  > svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    fill: var(--main-theme-color);
-  }
-
-  > span {
-    position: relative;
+.touch-active + .thumb-wrapper,
+.input:focus-visible + .thumb-wrapper {
+  .value-display {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
   }
 }
 
-.touch-active + .thumb-wrapper .value-display {
-  opacity: 1;
-  transform: scale(1);
-}
-
+/* The handle narrows while it's held. */
 .touch-active + .thumb-wrapper .thumb {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  width: 2px;
+  margin-left: -1px;
 }
 </style>

@@ -25,6 +25,7 @@ const demos = [
     description: 'Large photo',
     size: '2.8MB',
     filename: 'photo.jpg',
+    shape: 'cookie-9',
     url: largePhoto,
     iconUrl: largePhotoIcon,
   },
@@ -32,6 +33,7 @@ const demos = [
     description: 'Artwork',
     size: '2.9MB',
     filename: 'art.jpg',
+    shape: 'clover-4',
     url: artwork,
     iconUrl: artworkIcon,
   },
@@ -39,6 +41,7 @@ const demos = [
     description: 'Device screen',
     size: '1.6MB',
     filename: 'pixel3.png',
+    shape: 'cookie-4',
     url: deviceScreen,
     iconUrl: deviceScreenIcon,
   },
@@ -46,6 +49,7 @@ const demos = [
     description: 'SVG icon',
     size: '13KB',
     filename: 'squoosh.svg',
+    shape: 'pentagon',
     url: logo,
     iconUrl: logoIcon,
   },
@@ -185,13 +189,14 @@ async function onPasteClick() {
         </svg>
         <div class="load-img-content">
           <button class="unbutton load-btn" @click="fileInput!.click()">
-            <svg viewBox="0 0 24 24" class="load-icon">
+            <svg viewBox="0 0 24 24" class="load-icon" aria-hidden="true">
               <path
                 d="M19 7v3h-2V7h-3V5h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5a2 2 0 00-2 2v12c0 1.1.9 2 2 2h12a2 2 0 002-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"
               />
             </svg>
+            Choose image
           </button>
-          <div>
+          <div class="load-hint">
             <span class="drop-text">Drop </span>OR
             <button
               v-if="supportsClipboardAPI"
@@ -206,50 +211,29 @@ async function onPasteClick() {
       </div>
     </div>
     <div class="demos-container">
-      <svg viewBox="0 0 1920 140" class="top-wave">
-        <path
-          d="M1920 0l-107 28c-106 29-320 85-533 93-213 7-427-36-640-50s-427 0-533 7L0 85v171h1920z"
-          class="sub-wave"
-        />
-        <path
-          d="M0 129l64-26c64-27 192-81 320-75 128 5 256 69 384 64 128-6 256-80 384-91s256 43 384 70c128 26 256 26 320 26h64v96H0z"
-          class="main-wave"
-        />
-      </svg>
       <div class="content-padding">
         <p class="demo-title">Or <strong>try one</strong> of these:</p>
         <ul class="demos">
           <li v-for="(demo, i) in demos" :key="demo.filename">
-            <button class="unbutton" @click="onDemoClick(i)">
-              <div class="demo-container">
-                <div class="demo-icon-container">
-                  <img
-                    class="demo-icon"
-                    :src="demo.iconUrl"
-                    :alt="demo.description"
-                  />
-                  <div
-                    v-if="fetchingDemoIndex === i"
-                    class="demo-loader abs-fill"
-                  >
-                    <LoadingSpinner />
-                  </div>
+            <button class="unbutton demo" @click="onDemoClick(i)">
+              <div
+                class="demo-icon-container"
+                :style="{ '--demo-shape': `var(--shape-${demo.shape})` }"
+              >
+                <img class="demo-icon" :src="demo.iconUrl" alt="" />
+                <div
+                  v-if="fetchingDemoIndex === i"
+                  class="demo-loader abs-fill"
+                >
+                  <LoadingSpinner />
                 </div>
-                <div class="demo-size">{{ demo.size }}</div>
               </div>
+              <span class="demo-description">{{ demo.description }}</span>
+              <span class="demo-size">{{ demo.size }}</span>
             </button>
           </li>
         </ul>
       </div>
-    </div>
-
-    <div class="bottom-wave">
-      <svg viewBox="0 0 1920 79" class="top-wave">
-        <path
-          d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
-          class="info-wave"
-        />
-      </svg>
     </div>
 
     <section class="info">
@@ -329,12 +313,6 @@ async function onPasteClick() {
 
     <footer class="footer">
       <div class="footer-container">
-        <svg viewBox="0 0 1920 79" class="top-wave">
-          <path
-            d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
-            class="footer-wave"
-          />
-        </svg>
         <div class="footer-padding">
           <footer class="footer-items">
             <a
@@ -344,7 +322,7 @@ async function onPasteClick() {
               Privacy
             </a>
             <a class="footer-link footer-link-with-logo" :href="repoUrl">
-              <img :src="githubLogo" alt="" width="10" height="10" />
+              <img :src="githubLogo" alt="" width="18" height="18" />
               Source on Github
             </a>
           </footer>
@@ -368,8 +346,9 @@ async function onPasteClick() {
   overscroll-behavior: contain;
   display: grid;
   grid-template-rows: 1fr max-content max-content;
-  font-size: 1.2rem;
-  color: var(--dim-text);
+  font: var(--md-sys-typescale-body-large);
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface);
 }
 
 .blob-canvas {
@@ -387,11 +366,17 @@ async function onPasteClick() {
   grid-template-rows: max-content max-content;
   justify-items: center;
   position: relative;
-  --blob-pink: var(--hot-pink);
+  /* Extra room at the bottom for the demos sheet's rounded corners */
+  padding-bottom: 48px;
+  --blob-pink: var(--brand-pink);
   --center-blob-opacity: 0.3;
 
   @media (min-width: 600px) {
     min-height: 688px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    --center-blob-opacity: 0.4;
   }
 }
 
@@ -401,15 +386,12 @@ async function onPasteClick() {
 
 .logo {
   transform: translate(-1%, 0);
-  width: 224px;
+  width: 256px;
   height: auto;
 }
 
 .load-img {
   position: relative;
-  color: var(--white);
-  font-style: italic;
-  font-size: 1.2rem;
 }
 
 .blob-svg {
@@ -424,7 +406,7 @@ async function onPasteClick() {
 
 .load-img-content {
   position: relative;
-  --size: 29rem;
+  --size: 22rem;
   max-width: var(--size);
   width: 100vw;
   height: var(--size);
@@ -432,63 +414,239 @@ async function onPasteClick() {
   grid-template-rows: max-content max-content;
   justify-items: center;
   align-content: center;
-  gap: 0.7rem;
+  gap: 16px;
 
   @media (min-width: 600px) {
-    --size: 36rem;
+    --size: 27rem;
   }
 }
 
+/* Large extended FAB */
 .load-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 80px;
+  padding: 0 32px 0 26px;
+  border-radius: var(--md-sys-shape-corner-large-increased);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: var(--md-sys-elevation-3);
+  font: var(--md-sys-typescale-title-large);
+  font-weight: var(--md-sys-typescale-emphasized-weight);
+  transition-property: border-radius, scale, box-shadow;
+  transition-duration: var(--md-sys-motion-spring-default-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+
+  &:hover {
+    border-radius: 40px;
+    scale: 1.04;
+  }
+
+  &:active {
+    border-radius: var(--md-sys-shape-corner-medium);
+    scale: 0.97;
+    box-shadow: var(--md-sys-elevation-2);
+  }
+
+  &:focus-visible {
+    outline-offset: 4px;
+  }
 }
 
 .load-icon {
-  --size: 5rem;
+  --size: 32px;
   width: var(--size);
   height: var(--size);
-  fill: var(--white);
-  transform: translate(4.3%, -1%);
+  fill: currentColor;
 }
 
+.load-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 16px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-surface-container-lowest) 80%,
+    transparent
+  );
+  color: var(--md-sys-color-on-surface-variant);
+  font: var(--md-sys-typescale-label-large);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Text button */
 .paste-btn {
-  text-decoration: underline;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--md-sys-shape-corner-full);
+  color: var(--md-sys-color-primary);
   font: inherit;
-  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  transition: background-color var(--md-sys-motion-spring-fast-effects-duration);
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
 }
 
+.drop-text {
+  @media (max-width: 599px) {
+    display: none;
+  }
+}
+
+/* The demos sheet: blue, like the right-hand side of the editor. */
 .demos-container {
   position: relative;
-  background: var(--deep-blue);
-  padding-bottom: 5.2vw;
+  margin-top: -48px;
+  padding-bottom: 48px;
+  border-radius: var(--md-sys-shape-corner-extra-extra-large)
+    var(--md-sys-shape-corner-extra-extra-large) 0 0;
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
 }
 
-.top-wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
+.content-padding {
+  padding: 40px 16px 32px;
 }
 
-.main-wave {
-  fill: var(--deep-blue);
+.demo-title {
+  margin: 0;
+  font: var(--md-sys-typescale-headline-medium);
+  text-align: center;
+
+  strong {
+    font-weight: var(--md-sys-typescale-emphasized-weight);
+  }
 }
 
-.sub-wave {
-  fill: var(--light-blue);
+.demos {
+  display: grid;
+  gap: 12px;
+  justify-content: center;
+  padding: 0;
+  margin: 32px auto 0;
+  max-width: 880px;
+  --demo-size: 88px;
+  grid-template-columns: repeat(2, minmax(0, 160px));
+
+  @media (min-width: 740px) {
+    --demo-size: 112px;
+    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 200px));
+  }
+
+  & > li {
+    display: block;
+  }
 }
 
-.bottom-wave {
+/* Demo cards */
+.demo {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  padding: 20px 12px 16px;
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  background: var(--md-sys-color-surface-container-lowest);
+  color: var(--md-sys-color-on-surface);
+  transition-property: border-radius, scale, box-shadow;
+  transition-duration: var(--md-sys-motion-spring-default-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+
+  &:hover,
+  &:focus-visible {
+    border-radius: var(--md-sys-shape-corner-extra-extra-large);
+    box-shadow: var(--md-sys-elevation-2);
+  }
+
+  &:active {
+    scale: 0.96;
+    border-radius: var(--md-sys-shape-corner-large);
+  }
+}
+
+.demo-icon-container {
   position: relative;
+  width: var(--demo-size);
+  height: var(--demo-size);
+  margin-bottom: 8px;
+  clip-path: var(--demo-shape);
+  transition-property: clip-path, rotate;
+  transition-duration: var(--md-sys-motion-spring-default-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-default-spatial);
+
+  .demo:hover &,
+  .demo:focus-visible & {
+    clip-path: var(--shape-sunny);
+    rotate: 15deg;
+  }
 }
 
+.demo-icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: rotate var(--md-sys-motion-spring-default-spatial-duration)
+    var(--md-sys-motion-spring-fast-spatial);
+
+  /* Keep the picture upright while its frame turns. */
+  .demo:hover &,
+  .demo:focus-visible & {
+    rotate: -15deg;
+  }
+}
+
+.demo-description {
+  font: var(--md-sys-typescale-title-medium);
+}
+
+.demo-size {
+  padding: 2px 10px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  font: var(--md-sys-typescale-label-medium);
+}
+
+.demo-loader {
+  background: rgb(0 0 0 / 0.5);
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  animation: fade-in 600ms ease-in-out;
+
+  & > .loading-spinner {
+    --color: #fff;
+  }
+}
+
+/* Info: a surface sheet over the demos */
 .info {
-  background: var(--white);
+  background: var(--md-sys-color-surface);
   position: relative;
-  padding: 5em 2em;
+  padding: 3rem 1.5rem;
 
   @media (min-width: 1200px) {
-    padding: 5em 0;
+    padding: 4rem 0;
   }
+}
+
+.info:first-of-type {
+  margin-top: -48px;
+  padding-top: 4rem;
+  border-radius: var(--md-sys-shape-corner-extra-extra-large)
+    var(--md-sys-shape-corner-extra-extra-large) 0 0;
 }
 
 .info-container {
@@ -500,7 +658,7 @@ async function onPasteClick() {
   display: grid;
   align-items: center;
   grid-template-columns: 1fr;
-  gap: 1em;
+  gap: 1.5rem;
 
   grid-template-areas:
     'text'
@@ -509,34 +667,32 @@ async function onPasteClick() {
   @media (min-width: 712px) {
     grid-template-columns: 1fr 1fr;
     grid-template-areas: 'text img';
+    gap: 3rem;
 
-    .info:nth-child(even) & {
+    .info:nth-of-type(even) & {
       grid-template-areas: 'img text';
     }
   }
 }
 
 .info-title {
-  color: var(--pink);
-  font-size: 3em;
   margin: 0;
+  color: var(--md-sys-color-primary);
+  font: var(--md-sys-typescale-display-large);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+
+  @media (min-width: 712px) {
+    font-size: 4.5rem;
+    line-height: 1.1;
+  }
 }
 
 .info-caption {
-  font-size: 1.5em;
-  line-height: 1.75;
-  margin: 1em 0 0.5em 0;
-}
-
-.info-link {
-  font-size: 1.25em;
-  text-underline-offset: 0.25em;
-  color: var(--off-black);
-  transition: color 400ms ease-in-out;
-  margin-top: 1em;
-  &:hover {
-    color: var(--dim-blue);
-  }
+  margin: 1rem 0 0.5rem 0;
+  font: var(--md-sys-typescale-title-large);
+  line-height: 1.6;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .info-text-wrapper {
@@ -548,7 +704,7 @@ async function onPasteClick() {
 
   @media (min-width: 712px) {
     justify-self: start;
-    .info:nth-child(even) & {
+    .info:nth-of-type(even) & {
       text-align: right;
       justify-self: end;
     }
@@ -569,68 +725,63 @@ async function onPasteClick() {
   @media (min-width: 768px) {
     margin: 0 0 0 auto;
 
-    .info:nth-child(even) & {
+    .info:nth-of-type(even) & {
       margin: 0;
     }
   }
 }
 
-.info-wave {
-  fill: var(--white);
-}
-
 .footer {
-  background: var(--white);
-  padding-top: 5em;
+  background: var(--md-sys-color-surface);
+  padding-top: 3rem;
 }
 
 .footer-container {
-  position: relative;
-  background: var(--light-gray);
-}
-
-.footer-wave {
-  fill: var(--light-gray);
-}
-
-.content-padding {
-  padding: 2em 0;
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-extra-extra-large)
+    var(--md-sys-shape-corner-extra-extra-large) 0 0;
 }
 
 .footer-padding {
-  padding: 2em;
+  padding: 2rem 1.5rem;
 }
 
 .footer-items {
   display: grid;
-
   grid-auto-rows: max-content;
   justify-items: center;
-  gap: 2rem;
+  gap: 8px;
 
   @media (min-width: 480px) {
     justify-content: end;
     grid-auto-flow: column;
     align-items: center;
-    gap: 4rem;
   }
 }
 
+/* Tonal buttons */
 .footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 20px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font: var(--md-sys-typescale-label-large);
   text-decoration: none;
-  color: inherit;
+  transition: border-radius var(--md-sys-motion-spring-fast-spatial-duration)
+    var(--md-sys-motion-spring-fast-spatial);
+
+  &:hover {
+    border-radius: var(--md-sys-shape-corner-medium);
+  }
 }
 
-.footer-link-with-logo {
-  display: grid;
-  grid-template-columns: 1.8em max-content;
-  align-items: center;
-  gap: 0.6em;
-
-  img {
-    width: 100%;
-    height: auto;
-  }
+.footer-link-with-logo img {
+  width: 18px;
+  height: 18px;
 }
 
 @keyframes fade-in {
@@ -641,84 +792,22 @@ async function onPasteClick() {
 
 .install-btn {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: var(--deep-blue);
-  border-radius: 0.4em;
-  color: var(--white);
-  padding: 0.5em 1em;
-  font-size: 1.6rem;
+  top: 16px;
+  right: 16px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 24px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font: var(--md-sys-typescale-label-large);
+  font-size: 1rem;
+  box-shadow: var(--md-sys-elevation-1);
   animation: fade-in 600ms ease-in-out;
-}
+  transition: border-radius var(--md-sys-motion-spring-fast-spatial-duration)
+    var(--md-sys-motion-spring-fast-spatial);
 
-.demo-title {
-  color: var(--white);
-  margin: 0;
-  font-size: 2rem;
-  text-align: center;
-}
-
-.demos {
-  display: grid;
-  gap: 3rem;
-  justify-items: center;
-  justify-content: center;
-  padding: 0;
-  margin: 3rem auto;
-  --demo-size: 80px;
-  grid-template-columns: repeat(auto-fit, var(--demo-size));
-
-  @media (min-width: 740px) {
-    --demo-size: 100px;
-    gap: 6rem;
-  }
-
-  & > li {
-    display: block;
-  }
-}
-
-.demo-container {
-  transition: scale 400ms ease-in-out;
   &:hover {
-    scale: 1.05;
-  }
-}
-
-.demo-size {
-  background: var(--dim-blue);
-  border-radius: 1000px;
-  color: var(--white);
-  width: max-content;
-  padding: 0.5rem 1.2rem;
-  margin: 0.7rem auto 0;
-}
-
-.demo-icon-container {
-  border-radius: var(--demo-size);
-  position: relative;
-  overflow: hidden;
-}
-.demo-icon {
-  width: var(--demo-size);
-  height: var(--demo-size);
-  display: block;
-}
-.demo-loader {
-  background: rgba(0, 0, 0, 0.5);
-  display: grid;
-  justify-content: center;
-  align-content: center;
-  animation: fade-in 600ms ease-in-out;
-
-  & > .loading-spinner {
-    --color: var(--white);
-  }
-}
-
-.drop-text {
-  @media (max-width: 599px) {
-    display: none;
+    border-radius: var(--md-sys-shape-corner-medium);
   }
 }
 </style>

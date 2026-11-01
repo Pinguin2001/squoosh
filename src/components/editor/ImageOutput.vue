@@ -274,7 +274,7 @@ onBeforeUnmount(() => {
   </div>
   <div class="controls">
     <div class="button-group">
-      <button class="button first-button" @click="zoomOut">
+      <button class="button" title="Zoom out" @click="zoomOut">
         <RemoveIcon />
       </button>
       <input
@@ -285,40 +285,46 @@ onBeforeUnmount(() => {
         min="1"
         max="1000000"
         class="zoom"
+        aria-label="Zoom (%)"
         :value="Math.round(panZoom.scale.value * 100)"
         @input="onScaleInput"
         @blur="editingScale = false"
       />
-      <span v-else class="zoom" tabindex="0" @focus="onScaleValueFocus">
+      <span
+        v-else
+        class="zoom"
+        tabindex="0"
+        role="button"
+        aria-label="Edit zoom"
+        @focus="onScaleValueFocus"
+      >
         <span class="zoom-value">{{
           Math.round(panZoom.scale.value * 100)
         }}</span
         >%
       </span>
-      <button class="button last-button" @click="zoomIn">
+      <button class="button" title="Zoom in" @click="zoomIn">
         <AddIcon />
       </button>
     </div>
     <div class="button-group">
-      <button
-        class="button first-button"
-        title="Rotate"
-        @click="emit('rotate')"
-      >
+      <button class="button" title="Rotate" @click="emit('rotate')">
         <RotateIcon />
       </button>
       <button
         v-if="!isSafari"
-        class="button"
+        :class="['button', { selected: aliasing }]"
         title="Toggle smoothing"
+        :aria-pressed="aliasing"
         @click="aliasing = !aliasing"
       >
         <ToggleAliasingActiveIcon v-if="aliasing" />
         <ToggleAliasingIcon v-else />
       </button>
       <button
-        class="button last-button"
+        :class="['button', { selected: altBackground }]"
         title="Toggle background"
+        :aria-pressed="altBackground"
         @click="altBackground = !altBackground"
       >
         <ToggleBackgroundActiveIcon v-if="altBackground" />
@@ -332,6 +338,8 @@ onBeforeUnmount(() => {
 .output {
   display: contents;
 
+  /* The plain backdrop; the alternative background shows the checkerboard
+     underneath. */
   &::before {
     content: '';
     position: absolute;
@@ -339,23 +347,26 @@ onBeforeUnmount(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: #000;
-    opacity: 0.8;
-    transition: opacity 500ms ease;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><path d="M1 2V0h1v1H0v1z" fill-opacity=".06"/></svg>')
+      #fff;
+    background-size: 20px 20px;
+    box-shadow: inset 0 0 0 100vmax var(--image-backdrop);
+    transition: box-shadow var(--md-sys-motion-spring-slow-spatial-duration)
+      var(--md-sys-motion-spring-effects);
   }
 
   &.alt-background::before {
-    opacity: 0;
+    box-shadow: inset 0 0 0 100vmax transparent;
   }
 }
 
 .two-up {
-  --track-color: rgb(0 0 0 / 0.6);
-  --thumb-background: var(--black);
-  --thumb-color: var(--accent-color);
-  --thumb-size: 62px;
-  --bar-size: 9px;
-  --bar-touch-size: 30px;
+  --track-color: #fff;
+  --thumb-background: var(--md-sys-color-surface-container-high);
+  --thumb-width: 64px;
+  --thumb-height: 48px;
+  --bar-size: 4px;
+  --bar-touch-size: 48px;
   touch-action: none;
 }
 
@@ -413,6 +424,7 @@ onBeforeUnmount(() => {
   width: var(--bar-size);
   margin: 0 auto;
   background: var(--track-color);
+  box-shadow: 0 0 3px rgb(0 0 0 / 0.35);
 }
 
 .scrubber {
@@ -422,21 +434,35 @@ onBeforeUnmount(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: var(--thumb-size);
-  height: var(--thumb-size);
+  width: var(--thumb-width);
+  height: var(--thumb-height);
   background: var(--thumb-background);
-  border-radius: var(--thumb-size);
-  color: var(--thumb-color);
+  border-radius: calc(var(--thumb-height) / 2);
+  box-shadow: var(--md-sys-elevation-2);
   box-sizing: border-box;
-  padding: 0 calc(var(--thumb-size) * 0.24);
+  padding: 0 16px;
+  transition-property: border-radius, width, height;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+}
+
+/* The handle squares off and grows while dragged. */
+.two-up-handle:hover .scrubber {
+  width: calc(var(--thumb-width) + 8px);
+}
+
+.two-up-handle:active .scrubber {
+  border-radius: var(--md-sys-shape-corner-large);
+  width: calc(var(--thumb-width) + 12px);
+  height: calc(var(--thumb-height) + 8px);
 }
 
 .arrow-left {
-  fill: var(--pink);
+  fill: var(--md-sys-color-primary);
 }
 
 .arrow-right {
-  fill: var(--blue);
+  fill: var(--md-sys-color-tertiary);
 }
 
 .vertical .two-up-handle {
@@ -449,28 +475,24 @@ onBeforeUnmount(() => {
 .vertical .two-up-handle::before {
   width: auto;
   height: var(--bar-size);
-  box-shadow:
-    inset 0 calc(var(--bar-size) / 2) 0 rgba(0, 0, 0, 0.1),
-    0 1px 4px rgba(0, 0, 0, 0.4);
   margin: calc((var(--bar-touch-size) - var(--bar-size)) / 2) 0 0 0;
 }
 
 .vertical .scrubber {
-  box-shadow: 1px 0 4px rgba(0, 0, 0, 0.1);
   transform: translate(-50%, -50%) rotate(-90deg);
 }
 
 .controls {
   display: flex;
   justify-content: center;
-  overflow: hidden;
   flex-wrap: wrap;
   contain: content;
   grid-area: header;
   align-self: center;
-  padding: 9px 66px;
+  /* Clear of the back button; room for the toolbars' shadows. */
+  padding: 12px 72px;
   position: relative;
-  gap: 6px;
+  gap: 8px;
 
   /* Allow clicks to fall through to the pinch zoom area */
   pointer-events: none;
@@ -479,99 +501,103 @@ onBeforeUnmount(() => {
   }
 
   @media (min-width: 860px) {
-    padding: 9px;
+    padding: 16px;
     flex-wrap: wrap-reverse;
     grid-area: viewportOpts;
     align-self: end;
   }
 }
 
+/* Floating toolbars */
 .button-group {
   display: flex;
+  align-items: center;
+  gap: 2px;
   position: relative;
   z-index: 100;
+  padding: 4px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+  box-shadow: var(--md-sys-elevation-3);
 }
 
 .button,
 .zoom {
   display: flex;
   align-items: center;
+  justify-content: center;
   box-sizing: border-box;
-  background-color: rgba(29, 29, 29, 0.92);
-  border: 1px solid rgba(0, 0, 0, 0.67);
-  border-width: 1px 0 1px 1px;
-  line-height: 1.1;
+  height: 40px;
+  border: none;
+  border-radius: 20px;
+  background: transparent;
+  color: inherit;
   white-space: nowrap;
-  height: 39px;
-  padding: 0 8px;
-  font-size: 1.2rem;
   cursor: pointer;
+  transition-property: border-radius, background-color, color;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px #fff;
-    outline: none;
+    outline: 3px solid var(--md-sys-color-secondary);
+    outline-offset: 0;
     z-index: 1;
   }
 }
 
 .button {
-  color: #fff;
+  width: 40px;
+  padding: 0;
   margin: 0;
 
   &:hover {
-    background: rgba(50, 50, 50, 0.92);
+    background: color-mix(in srgb, currentColor 8%, transparent);
   }
 
-  &.active {
-    background: rgba(72, 72, 72, 0.92);
-    color: #fff;
+  /* Pressed buttons morph towards a square. */
+  &:active {
+    border-radius: var(--md-sys-shape-corner-small);
+    background: color-mix(in srgb, currentColor 12%, transparent);
   }
-}
 
-.first-button {
-  border-radius: 6px 0 0 6px;
-}
-
-.last-button {
-  border-radius: 0 6px 6px 0;
-  border-right-width: 1px;
+  /* Selected toggle buttons are square and tonal. */
+  &.selected {
+    border-radius: var(--md-sys-shape-corner-medium);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+  }
 }
 
 .zoom {
   cursor: text;
-  width: 7rem;
-  font: inherit;
+  width: 72px;
+  font: var(--md-sys-typescale-label-large);
   text-align: center;
-  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+}
 
-  &:focus {
-    box-shadow:
-      inset 0 1px 4px rgba(0, 0, 0, 0.2),
-      0 0 0 2px #fff;
-  }
-}
-span.zoom {
-  color: #939393;
-  font-size: 0.8rem;
-  line-height: 1.2;
-  font-weight: 100;
-}
 input.zoom {
-  font-size: 1.2rem;
-  letter-spacing: 0.05rem;
-  font-weight: 700;
-  text-indent: 3px;
-  color: #fff;
+  background: var(--md-sys-color-surface-container-highest);
+  border-radius: var(--md-sys-shape-corner-medium);
+  color: var(--md-sys-color-on-surface);
+  font-variant-numeric: tabular-nums;
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
 }
 
 .zoom-value {
-  margin: 0 3px 0 0;
-  padding: 0 2px;
-  font-size: 1.2rem;
-  letter-spacing: 0.05rem;
-  font-weight: 700;
-  color: #fff;
-  border-bottom: 1px dashed #999;
+  margin-right: 1px;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 1px dashed var(--md-sys-color-outline);
 }
 
 .pixelated {

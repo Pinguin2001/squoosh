@@ -29,7 +29,7 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       injectManifest: {
-        globPatterns: ['**/*.{html,js,css,wasm,svg,png,jpg,ico}'],
+        globPatterns: ['**/*.{html,js,css,wasm,svg,png,jpg,ico,woff2}'],
         // Demo images are cached when used rather than up front.
         globIgnores: ['**/demo-*', 'screenshots/**'],
         // The largest codec is about 3MB.

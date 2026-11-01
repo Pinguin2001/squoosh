@@ -61,16 +61,10 @@ function onRotate() {
       :right-img-contain="rightImgContain"
       @rotate="onRotate"
     />
-    <button class="unbutton back" @click="emit('back')">
-      <svg viewBox="0 0 61 53.3">
-        <title>Back</title>
+    <button class="unbutton back" title="Back" @click="emit('back')">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
-          class="back-blob"
-          d="M0 25.6c-.5-7.1 4.1-14.5 10-19.1S23.4.1 32.2 0c8.8 0 19 1.6 24.4 8s5.6 17.8 1.7 27a29.7 29.7 0 01-20.5 18c-8.4 1.5-17.3-2.6-24.5-8S.5 32.6.1 25.6z"
-        />
-        <path
-          class="back-x"
-          d="M41.6 17.1l-2-2.1-8.3 8.2-8.2-8.2-2 2 8.2 8.3-8.3 8.2 2.1 2 8.2-8.1 8.3 8.2 2-2-8.2-8.3z"
+          d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
         />
       </svg>
     </button>
@@ -148,8 +142,6 @@ function onRotate() {
     'header'
     'opts';
 
-  --options-radius: 7px;
-
   @media (min-width: 600px) {
     grid-template-rows: max-content 1fr;
     grid-template-columns: max-content 1fr max-content;
@@ -161,11 +153,10 @@ function onRotate() {
 
 .options {
   position: relative;
-  color: #fff;
-  font-size: 1.2rem;
+  color: var(--md-sys-color-on-surface);
   max-width: 400px;
-  margin: 0 auto;
-  width: calc(100% - 60px);
+  margin: 0 auto 12px;
+  width: calc(100% - 24px);
   max-height: 100%;
   overflow: hidden;
   grid-area: opts;
@@ -173,10 +164,11 @@ function onRotate() {
   grid-template-rows: 1fr max-content;
   align-content: end;
   align-self: end;
+  gap: 8px;
 
   @media (min-width: 600px) {
-    width: 300px;
-    margin: 0;
+    width: 320px;
+    margin: 0 16px 16px;
   }
 }
 
@@ -188,16 +180,25 @@ function onRotate() {
   grid-area: optsRight;
 }
 
+/* The options card floats over the image. */
+.options > :deep(.options-scroller),
+.multi-panel :deep(.options-scroller) {
+  box-shadow: var(--md-sys-elevation-2);
+}
+
 .multi-panel {
   position: relative;
   display: flex;
   flex-flow: column;
   overflow: hidden;
+  /* Room for the cards' shadows */
+  padding: 4px;
+  margin: -4px;
 
   /* Reorder so headings appear after content: */
   & > :deep(:nth-child(1)) {
     order: 2;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   & > :deep(:nth-child(2)) {
@@ -211,50 +212,57 @@ function onRotate() {
   & > :deep(:nth-child(4)) {
     order: 3;
   }
-}
 
-.back {
-  position: relative;
-  grid-area: header;
-  margin: 9px;
-  justify-self: start;
-  align-self: start;
-
-  & > svg {
-    width: 47px;
-    overflow: visible;
+  & > :deep(.panel-content[aria-expanded='true']) {
+    margin-bottom: 8px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
   }
 
-  &:focus .back-blob {
-    stroke: var(--deep-blue);
-    stroke-width: 5px;
-    animation: strokePulse 500ms ease forwards;
+  & > :deep(.panel-heading) {
+    border-radius: var(--md-sys-shape-corner-full);
+    cursor: pointer;
+  }
+}
+
+/* Filled tonal icon button */
+.back {
+  position: relative;
+  z-index: 1;
+  grid-area: header;
+  margin: 12px;
+  justify-self: start;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  box-shadow: var(--md-sys-elevation-2);
+  transition-property: border-radius, scale;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+
+  & > svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+
+  &:hover {
+    border-radius: var(--md-sys-shape-corner-large);
+  }
+
+  &:active {
+    border-radius: var(--md-sys-shape-corner-medium);
+    scale: 0.95;
   }
 
   @media (min-width: 600px) {
-    margin: 14px;
-
-    & > svg {
-      width: 58px;
-    }
+    margin: 16px;
+    width: 56px;
+    height: 56px;
   }
-}
-
-@keyframes strokePulse {
-  from {
-    stroke-width: 8px;
-  }
-  to {
-    stroke-width: 5px;
-  }
-}
-
-.back-blob {
-  fill: var(--hot-pink);
-  opacity: 0.77;
-}
-
-.back-x {
-  fill: var(--white);
 }
 </style>

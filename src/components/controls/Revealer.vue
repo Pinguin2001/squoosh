@@ -1,5 +1,6 @@
+<!-- A chevron icon button that turns as its section opens. -->
 <script setup lang="ts">
-import { Arrow } from '@/components/icons';
+import { ExpandIcon } from '@/components/icons';
 
 defineOptions({ inheritAttrs: false });
 const checked = defineModel<boolean>({ default: false });
@@ -14,29 +15,39 @@ const checked = defineModel<boolean>({ default: false });
       v-bind="$attrs"
     />
     <div class="arrow">
-      <Arrow />
+      <ExpandIcon />
     </div>
   </div>
 </template>
 
 <style scoped>
 .checkbox {
-  display: inline-block;
+  display: inline-grid;
   position: relative;
+  margin: -8px 0 -8px -8px;
 }
 
 .arrow {
-  width: 10px;
-  height: 10px;
-  fill: var(--white);
-  transition: transform 200ms ease;
-  transform: rotate(-90deg);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  color: var(--md-sys-color-on-surface-variant);
+  background: transparent;
+  transition-property: rotate, background-color, border-radius, color;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+  rotate: -90deg;
 
   svg {
-    width: 100%;
-    height: 100%;
     display: block;
   }
+}
+
+.checkbox:has(:focus-visible) .arrow {
+  outline: 3px solid var(--md-sys-color-secondary);
+  outline-offset: 0;
 }
 
 .real-checkbox {
@@ -46,7 +57,11 @@ const checked = defineModel<boolean>({ default: false });
   pointer-events: none;
 
   &:checked + .arrow {
-    transform: none;
+    rotate: 0deg;
+    /* Selected icon buttons go from round to square. */
+    border-radius: var(--md-sys-shape-corner-medium);
+    background: var(--side-container, var(--md-sys-color-secondary-container));
+    color: var(--side-on-container, var(--md-sys-color-on-secondary-container));
   }
 }
 </style>

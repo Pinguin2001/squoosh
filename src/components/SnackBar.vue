@@ -67,28 +67,35 @@ watch(
 .snackbar {
   position: fixed;
   display: flex;
+  align-items: center;
   box-sizing: border-box;
   left: 50%;
   bottom: 24px;
+  min-height: 48px;
   width: 344px;
-  margin-left: -172px;
-  background: #2a2a2a;
-  border-radius: 2px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  transform-origin: center;
-  color: #eee;
+  max-width: calc(100% - 24px);
+  translate: -50% 0;
+  padding: 4px 8px 4px 16px;
+  background: var(--md-sys-color-inverse-surface);
+  color: var(--md-sys-color-inverse-on-surface);
+  font: var(--md-sys-typescale-body-medium);
+  border-radius: var(--md-sys-shape-corner-large);
+  box-shadow: var(--md-sys-elevation-3);
+  transform-origin: center bottom;
   z-index: 100;
   cursor: default;
   will-change: transform;
-  animation: snackbar-show 300ms ease forwards 1;
+  animation: snackbar-show var(--md-sys-motion-spring-default-spatial-duration)
+    var(--md-sys-motion-spring-fast-spatial) forwards 1;
 }
 .snackbar[aria-hidden='true'] {
-  animation: snackbar-hide 300ms ease forwards 1;
+  animation: snackbar-hide var(--md-sys-motion-spring-default-effects-duration)
+    var(--md-sys-motion-spring-effects) forwards 1;
 }
 @keyframes snackbar-show {
   from {
     opacity: 0;
-    transform: scale(0.5);
+    transform: translateY(24px) scale(0.8);
   }
 }
 @keyframes snackbar-hide {
@@ -100,64 +107,33 @@ watch(
 
 @media (max-width: 400px) {
   .snackbar {
-    width: 100%;
-    bottom: 0;
-    left: 0;
-    margin-left: 0;
-    border-radius: 0;
+    bottom: 12px;
   }
 }
 
 .text {
   flex: 1 1 auto;
-  padding: 16px;
-  font-size: 100%;
+  padding: 10px 0;
 }
 
 .button {
-  position: relative;
-  flex: 0 1 auto;
-  padding: 8px;
-  height: 100%;
-  margin: auto 8px auto -8px;
-  min-width: 5em;
+  flex: none;
+  min-height: 40px;
+  margin-left: 8px;
+  padding: 0 12px;
   background: none;
   border: none;
-  border-radius: 3px;
-  color: lightgreen;
-  font-weight: inherit;
-  letter-spacing: 0.05em;
-  font-size: 100%;
-  text-transform: uppercase;
-  text-align: center;
+  border-radius: var(--md-sys-shape-corner-full);
+  color: var(--md-sys-color-inverse-primary);
+  font: var(--md-sys-typescale-label-large);
   cursor: pointer;
-  overflow: hidden;
-  transition: background-color 200ms ease;
-  outline: none;
-  text-decoration: none;
+  transition: background-color var(--md-sys-motion-spring-fast-effects-duration);
 }
 .button:hover {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: color-mix(in srgb, currentColor 8%, transparent);
 }
-.button:focus:before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 120%;
-  height: 0;
-  padding: 0 0 120%;
-  margin: -60% 0 0 -60%;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  transform-origin: center;
-  will-change: transform;
-  animation: focus-ring 300ms ease-out forwards 1;
-  pointer-events: none;
-}
-@keyframes focus-ring {
-  from {
-    transform: scale(0.01);
-  }
+.button:focus-visible {
+  outline: 3px solid var(--md-sys-color-inverse-primary);
+  outline-offset: 0;
 }
 </style>

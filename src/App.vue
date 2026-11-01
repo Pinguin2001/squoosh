@@ -180,10 +180,13 @@ onBeforeUnmount(() => {
     top: 10px;
     right: 10px;
     bottom: 10px;
-    border: 2px dashed #fff;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-color: var(--pink);
-    border-radius: 10px;
+    border: 3px dashed var(--md-sys-color-primary);
+    background-color: color-mix(
+      in srgb,
+      var(--md-sys-color-primary) 12%,
+      transparent
+    );
+    border-radius: var(--md-sys-shape-corner-extra-large);
     opacity: 0;
     transform: scale(0.95);
     transition: all 200ms ease-in;
@@ -203,7 +206,6 @@ onBeforeUnmount(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  --size: 225px;
-  --stroke-width: 26px;
+  --size: 120px;
 }
 </style>

@@ -3,11 +3,14 @@
 <script setup lang="ts">
 import { transitionHeight } from '@/lib/util';
 
+const easing = 'var(--md-sys-motion-spring-default-spatial)';
+const duration = 450;
+
 async function onEnter(el: Element, done: () => void) {
   const element = el as HTMLElement;
   const height = element.getBoundingClientRect().height;
   element.style.overflow = 'hidden';
-  await transitionHeight(element, { duration: 300, from: 0, to: height });
+  await transitionHeight(element, { duration, easing, from: 0, to: height });
   // Unset the height & overflow, so element changes do the right thing.
   element.style.height = '';
   element.style.overflow = '';
@@ -18,7 +21,7 @@ async function onLeave(el: Element, done: () => void) {
   const element = el as HTMLElement;
   element.style.pointerEvents = 'none';
   element.style.overflow = 'hidden';
-  await transitionHeight(element, { duration: 300, to: 0 });
+  await transitionHeight(element, { duration, easing, to: 0 });
   done();
 }
 </script>

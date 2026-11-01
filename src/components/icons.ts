@@ -44,14 +44,6 @@ export const AddIcon = icon('M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z');
 
 export const RemoveIcon = icon('M19 13H5v-2h14v2z');
 
-export const UncheckedIcon = icon(
-  'M21.3 2.7v18.6H2.7V2.7h18.6m0-2.7H2.7A2.7 2.7 0 0 0 0 2.7v18.6A2.7 2.7 0 0 0 2.7 24h18.6a2.7 2.7 0 0 0 2.7-2.7V2.7A2.7 2.7 0 0 0 21.3 0z',
-);
-
-export const CheckedIcon = icon(
-  'M21.3 0H2.7A2.7 2.7 0 0 0 0 2.7v18.6A2.7 2.7 0 0 0 2.7 24h18.6a2.7 2.7 0 0 0 2.7-2.7V2.7A2.7 2.7 0 0 0 21.3 0zm-12 18.7L2.7 12l1.8-1.9L9.3 15 19.5 4.8l1.8 1.9z',
-);
-
 export const ExpandIcon = icon('M16.6 8.6L12 13.2 7.4 8.6 6 10l6 6 6-6z');
 
 export const Arrow: FunctionalComponent = () =>

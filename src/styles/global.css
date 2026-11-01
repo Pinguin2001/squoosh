@@ -1,3 +1,4 @@
+/* Brand colours from the original app, still used by a few details. */
 html {
   --pink: #ff3385;
   --hot-pink: #ff0066;
@@ -40,24 +41,23 @@ html {
   -webkit-touch-callout: none;
 }
 
+html {
+  /* 100% so text follows the user's browser font size. */
+  font-size: 100%;
+}
+
 html,
 body {
   height: 100%;
   padding: 0;
   margin: 0;
-  font:
-    12px/1.3 'HelveticaNeue-Light',
-    'Helvetica Neue Light',
-    'Helvetica Neue',
-    Helvetica,
-    Arial,
-    'Lucida Grande',
-    sans-serif;
+  font: var(--md-sys-typescale-body-medium);
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface);
+  -webkit-font-smoothing: antialiased;
   overflow: hidden;
   overscroll-behavior: none;
   contain: strict;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><path d="M1 2V0h1v1H0v1z" fill-opacity=".025"/></svg>');
-  background-size: 20px 20px;
 }
 
 #app {
@@ -91,4 +91,18 @@ body {
   &:focus {
     outline: none;
   }
+}
+
+/* One focus ring for everything that's reached by keyboard. */
+:focus-visible,
+.unbutton:focus-visible {
+  outline: 3px solid var(--focus-ring-color, var(--md-sys-color-secondary));
+  outline-offset: 2px;
+}
+
+/* The checkerboard that shows through transparent images. */
+.checkerboard {
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><path d="M1 2V0h1v1H0v1z" fill-opacity=".05"/></svg>')
+    var(--md-sys-color-surface-container-lowest);
+  background-size: 20px 20px;
 }

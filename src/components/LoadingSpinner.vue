@@ -1,20 +1,9 @@
-<!-- Material-style indeterminate spinner. It stays hidden for --delay, so
-     quick loads don't flash it. -->
+<!-- Material 3 Expressive loading indicator: a shape that spins and morphs
+     through the expressive shapes. It stays hidden for --delay, so quick loads
+     don't flash it. -->
 <template>
-  <div class="loading-spinner">
-    <div class="spinner-container">
-      <div class="spinner-layer">
-        <div class="spinner-circle-clipper spinner-left">
-          <div class="spinner-circle"></div>
-        </div>
-        <div class="spinner-gap-patch">
-          <div class="spinner-circle"></div>
-        </div>
-        <div class="spinner-circle-clipper spinner-right">
-          <div class="spinner-circle"></div>
-        </div>
-      </div>
-    </div>
+  <div class="loading-spinner" role="progressbar" aria-label="Loading">
+    <div class="shape"></div>
   </div>
 </template>
 
@@ -25,154 +14,65 @@
   }
 }
 
-@keyframes spinner-left-spin {
-  from {
-    transform: rotate(130deg);
+@keyframes spinner-morph {
+  0%,
+  100% {
+    clip-path: var(--shape-soft-burst);
   }
-  50% {
-    transform: rotate(-5deg);
+  14% {
+    clip-path: var(--shape-cookie-9);
   }
-  to {
-    transform: rotate(130deg);
+  28% {
+    clip-path: var(--shape-pentagon);
   }
-}
-
-@keyframes spinner-right-spin {
-  from {
-    transform: rotate(-130deg);
+  42% {
+    clip-path: var(--shape-oval);
   }
-  50% {
-    transform: rotate(5deg);
+  57% {
+    clip-path: var(--shape-sunny);
   }
-  to {
-    transform: rotate(-130deg);
+  71% {
+    clip-path: var(--shape-cookie-4);
   }
-}
-
-@keyframes spinner-container-rotate {
-  to {
-    transform: rotate(360deg);
+  85% {
+    clip-path: var(--shape-circle);
   }
 }
 
-@keyframes spinner-fill-unfill-rotate {
-  12.5% {
-    transform: rotate(135deg);
-  } /* 0.5 * ARCSIZE */
-  25% {
-    transform: rotate(270deg);
-  } /* 1   * ARCSIZE */
-  37.5% {
-    transform: rotate(405deg);
-  } /* 1.5 * ARCSIZE */
-  50% {
-    transform: rotate(540deg);
-  } /* 2   * ARCSIZE */
-  62.5% {
-    transform: rotate(675deg);
-  } /* 2.5 * ARCSIZE */
-  75% {
-    transform: rotate(810deg);
-  } /* 3   * ARCSIZE */
-  87.5% {
-    transform: rotate(945deg);
-  } /* 3.5 * ARCSIZE */
+@keyframes spinner-rotate {
   to {
-    transform: rotate(1080deg);
-  } /* 4   * ARCSIZE */
+    rotate: 1turn;
+  }
 }
 
 .loading-spinner {
-  --size: 28px;
-  --color: #4285f4;
-  --stroke-width: 3px;
+  --size: 48px;
+  --color: var(--md-sys-color-primary);
   --delay: 300ms;
 
   pointer-events: none;
-  display: inline-block;
-  position: relative;
+  display: inline-grid;
+  place-items: center;
   width: var(--size);
   height: var(--size);
-  border-color: var(--color);
   /* Hidden until the delay is over */
   animation: spinner-delay var(--delay) step-end;
 }
 
-.spinner-circle {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  box-sizing: border-box;
-  height: 100%;
-  width: 200%;
-  border-width: var(--stroke-width);
-  border-style: solid;
-  border-color: inherit;
-  border-bottom-color: transparent !important;
-  border-radius: 50%;
+.shape {
+  /* The indicator is 38/48 of its container in the spec. */
+  width: 79%;
+  height: 79%;
+  background: var(--color);
+  clip-path: var(--shape-soft-burst);
+  animation:
+    spinner-morph 4.9s ease-in-out infinite,
+    spinner-rotate 4.9s linear infinite;
 }
 
-/*
-  Patch the gap that appear between the two adjacent div.circle-clipper while the
-  spinner is rotating (appears on Chrome 38, Safari 7.1, and IE 11).
-*/
-.spinner-gap-patch {
-  position: absolute;
-  box-sizing: border-box;
-  top: 0;
-  left: 45%;
-  width: 10%;
-  height: 100%;
-  overflow: hidden;
-  border-color: inherit;
-}
-
-.spinner-gap-patch .spinner-circle {
-  width: 1000%;
-  left: -450%;
-}
-
-.spinner-circle-clipper {
-  display: inline-block;
-  position: relative;
-  width: 50%;
-  height: 100%;
-  overflow: hidden;
-  border-color: inherit;
-}
-
-.spinner-left .spinner-circle {
-  border-right-color: transparent !important;
-  transform: rotate(129deg);
-  animation: spinner-left-spin 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite both;
-}
-
-.spinner-right .spinner-circle {
-  left: -100%;
-  border-left-color: transparent !important;
-  transform: rotate(-129deg);
-  animation: spinner-right-spin 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite
-    both;
-}
-
-.spinner-container {
-  width: 100%;
-  height: 100%;
-  border-color: inherit;
-
-  /* duration: 360 * ARCTIME / (ARCSTARTROT + (360-ARCSIZE)) */
-  animation: spinner-container-rotate 1568ms linear infinite;
-}
-
-.spinner-layer {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-color: inherit;
-  /* durations: 4 * ARCTIME */
-  animation: spinner-fill-unfill-rotate 5332ms cubic-bezier(0.4, 0, 0.2, 1)
-    infinite both;
+@media (prefers-reduced-motion: reduce) {
+  .shape {
+    animation: spinner-rotate 2s linear infinite;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T">
-import { Arrow } from '@/components/icons';
+import { ExpandIcon } from '@/components/icons';
 
 defineOptions({ inheritAttrs: false });
 defineProps<{ large?: boolean }>();
@@ -12,7 +12,7 @@ const value = defineModel<T>();
       <slot />
     </select>
     <div class="arrow">
-      <Arrow />
+      <ExpandIcon />
     </div>
   </div>
 </template>
@@ -20,20 +20,48 @@ const value = defineModel<T>();
 <style scoped>
 .select {
   position: relative;
+  min-width: 0;
 }
 
 .builtin-select {
-  background: var(--black);
-  border-radius: 4px;
-  font: inherit;
-  padding: 7px 0;
-  padding-right: 25px;
-  padding-left: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 40px 0 14px;
+  border: none;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  font: var(--md-sys-typescale-body-large);
   -webkit-appearance: none;
   -moz-appearance: none;
-  border: none;
-  color: #fff;
-  width: 100%;
+  appearance: none;
+  cursor: pointer;
+  transition-property: border-radius, background-color;
+  transition-duration: var(--md-sys-motion-spring-fast-spatial-duration);
+  transition-timing-function: var(--md-sys-motion-spring-fast-spatial);
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--md-sys-color-on-surface) 8%,
+      var(--md-sys-color-surface-container-highest)
+    );
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--md-sys-color-secondary);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    border-radius: var(--md-sys-shape-corner-small);
+  }
+
+  option {
+    background: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+  }
 }
 
 .arrow {
@@ -41,13 +69,37 @@ const value = defineModel<T>();
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  fill: #fff;
-  width: 10px;
+  color: var(--md-sys-color-on-surface-variant);
   pointer-events: none;
+
+  svg {
+    display: block;
+  }
 }
 
 .large .builtin-select {
-  padding: 10px 35px 10px 10px;
-  background: var(--dark-gray);
+  min-height: 56px;
+  padding-left: 20px;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--side-container, var(--md-sys-color-secondary-container));
+  color: var(--side-on-container, var(--md-sys-color-on-secondary-container));
+  font: var(--md-sys-typescale-title-medium);
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--side-on-container, var(--md-sys-color-on-secondary-container)) 8%,
+      var(--side-container, var(--md-sys-color-secondary-container))
+    );
+  }
+
+  &:active {
+    border-radius: var(--md-sys-shape-corner-medium);
+  }
+}
+
+.large .arrow {
+  right: 14px;
+  color: var(--side-on-container, var(--md-sys-color-on-secondary-container));
 }
 </style>

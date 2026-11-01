@@ -72,6 +72,16 @@ is stale: `rm -rf node_modules && bun install --frozen-lockfile`.
 - Scoped CSS uses native nesting; class names are kebab-case copies of the
   old CSS modules. Shared option styles and side themes are global
   (`src/styles/options.css`).
+- **Material 3 Expressive look** (agreed departure from the original UI):
+  `src/styles/tokens.css` holds the colour roles (generated once with
+  Material Color Utilities from pink #ff3385 = primary and blue #5fb4e4 =
+  tertiary; dark scheme follows the system only), shape, type scale and
+  spring motion (`linear()` curves). `src/styles/shapes.css` has the
+  expressive shapes as 64-point polygons so `clip-path` can morph between
+  them. Side themes set `--side-accent`/`--side-container` (+ `on-` pairs):
+  left = primary, right = tertiary. Font: Roboto Flex (latin, wght axis,
+  OFL) self-hosted in `src/assets/fonts/`, precached by the SW. Root font
+  size is 100% (was 12px).
 
 ## Building codecs
 
