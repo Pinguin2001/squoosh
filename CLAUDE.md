@@ -1,8 +1,8 @@
 # Squoosh (Pinguin2001 fork)
 
 Image compression web app. This fork rewrote the UI from Preact + Rollup to
-**Vue 3 + Vite + TypeScript** (branch `vue-rewrite`, based on `dev`) and is
-modernizing the codecs. Owner: Julian (`Pinguin2001` on GitHub, remote
+**Vue 3 + Vite + TypeScript** (merged into `dev` in November 2026) and is
+modernizing the codecs. `dev` is the main branch. Owner: Julian (`Pinguin2001` on GitHub, remote
 `origin`; `upstream` is GoogleChromeLabs/squoosh and is never pushed to).
 
 Planned hosting: Cloudflare Pages at `squoosh.julianhasreiter.eu` (needs the
@@ -42,8 +42,7 @@ is stale: `rm -rf node_modules && bun install --frozen-lockfile`.
   an explicit `methodNames` list that must match (compile-time checked).
 - `src/sw.ts`: Workbox service worker (injectManifest).
 - `codecs/`: prebuilt wasm codecs, committed, built with Docker.
-- `docs/vue-rewrite-handoff.md` (rewrite status, verification yardstick) and
-  `docs/codec-modernization-plan.md` (codec plan; phases 1–3 done, 4 open).
+- `docs/codec-modernization-plan.md`: codec plan (phases 1–3 done, 4 open).
 
 ## How things work (non-obvious)
 
@@ -103,7 +102,8 @@ them executable). Pitfalls already solved, keep them:
   the macOS browser pane, exact bytes: AVIF 8461, JPEG XL 20302, MozJPEG
   18788, OxiPNG 29267, QOI 40566, WebP 14218, Browser WebP ~16.0 kB;
   OxiPNG + reduce palette 17586, + resize 50 % Lanczos3 17554, hqx 14879.
-  Codec rebuilds without version changes must stay byte-identical.
+  Codec rebuilds without version changes must stay byte-identical. (The
+  same demo gives different sizes on Windows, e.g. OxiPNG 45.1 kB.)
 - Drive the UI with real input events in the browser pane; Vite reloads
   the page whenever files under `codecs/` change (scripts get cut off).
 - The pane's main tab emulates dark mode, which makes the page background
@@ -128,4 +128,8 @@ them executable). Pitfalls already solved, keep them:
   `wip: …` during the rewrite, descriptive subject + bullet body. End with
   the Co-Authored-By line.
 - Keep the look and behaviour of the original app 1:1 unless agreed.
-- No analytics. Decisions so far are recorded in the two docs above.
+- Decisions from the rewrite: no analytics (README privacy section says so),
+  keep the PWA (offline, install, share target), no prerendering (plain
+  SPA), no vue-router or Pinia (two views, state in `useCompressor`),
+  `browserGIF` and WebP v2 removed, custom elements replaced by Vue
+  components, generated codec files replaced by `registry.ts`.
