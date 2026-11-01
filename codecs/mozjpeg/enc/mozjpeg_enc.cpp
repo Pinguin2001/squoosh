@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
+#include "jconfigint.h"
 #include "jpeglib.h"
 
 extern "C" {
@@ -13,12 +13,6 @@ extern "C" {
 }
 
 using namespace emscripten;
-
-// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro
-// hackery to turn it into a string. More details here:
-// https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
-#define xstr(s) str(s)
-#define str(s) #s
 
 struct MozJpegOptions {
   int quality;
@@ -39,8 +33,10 @@ struct MozJpegOptions {
   int chroma_quality;
 };
 
+// MozJPEG only has a string version ("4.1.5", from jconfigint.h), so this
+// packs it into a number.
 int version() {
-  char buffer[] = xstr(MOZJPEG_VERSION);
+  char buffer[] = VERSION;
   int version = 0;
   int last_index = 0;
   for (int i = 0; i < strlen(buffer); i++) {
