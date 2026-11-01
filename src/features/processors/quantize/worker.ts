@@ -10,32 +10,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { QuantizerModule } from 'codecs/imagequant/imagequant';
-import { initEmscriptenModule } from '@/features/worker-utils';
 import type { Options } from './meta';
 
-let emscriptenModule: Promise<QuantizerModule>;
+async function init() {
+  const imagequant = await import('codecs/imagequant/pkg/squoosh_imagequant');
+  await imagequant.default();
+  return imagequant;
+}
+
+let wasmReady: ReturnType<typeof init>;
 
 export default async function process(
   data: ImageData,
   opts: Options,
 ): Promise<ImageData> {
-  if (!emscriptenModule) {
-    const imagequant = await import('codecs/imagequant/imagequant');
-    emscriptenModule = initEmscriptenModule(imagequant.default);
-  }
+  if (!wasmReady) wasmReady = init();
+  const imagequant = await wasmReady;
 
-  const module = await emscriptenModule;
-
+  // wasm-bindgen copies the pixels in; any byte array view works.
+  const pixels = data.data as unknown as Uint8Array;
   const result = opts.zx
-    ? module.zx_quantize(data.data, data.width, data.height, opts.dither)
-    : module.quantize(
-        data.data,
+    ? imagequant.zx_quantize(pixels, data.width, data.height, opts.dither)
+    : imagequant.quantize(
+        pixels,
         data.width,
         data.height,
         opts.maxNumColors,
         opts.dither,
       );
 
-  return new ImageData(result, data.width, data.height);
+  return new ImageData(
+    result as Uint8ClampedArray<ArrayBuffer>,
+    data.width,
+    data.height,
+  );
 }

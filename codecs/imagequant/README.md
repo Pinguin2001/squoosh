@@ -1,27 +1,19 @@
 # ImageQuant
 
-- Source: <https://github.com/ImageOptim/libimagequant>
-- Version: v2.12.1
-- License: GPL3
+- Source: <https://github.com/ImageOptim/libimagequant> (the `imagequant` crate)
+- Version: 4.4.1
+- License: GPL-3.0-or-later
 
-## Dependencies
-
-- Docker
-
-## Example
-
-See `example.html`
+Built with `../build-rust.sh` (wasm-pack) into `pkg/`.
 
 ## API
 
-### `int version()`
+### `quantize(data, width, height, numColors, dither): Uint8ClampedArray`
 
-Returns the version of libimagequant as a number. va.b.c is encoded as 0x0a0b0c
+Reduces RGBA pixels to at most `numColors` colours, with dithering from 0
+to 1, and returns RGBA pixels again.
 
-### `RawImage quantize(std::string buffer, int image_width, int image_height, int numColors, float dithering)`
+### `zx_quantize(data, width, height, dither): Uint8ClampedArray`
 
-Quantizes the given images, using at most `numColors`, a value between 2 and 256. `dithering` is a value between 0 and 1 controlling the amount of dithering. `RawImage` is a class with 3 fields: `buffer`, `width`, and `height`.
-
-### `RawImage zx_quantize(std::string buffer, int image_width, int image_height, float dithering)`
-
-???
+Mimics the ZX Spectrum: each 8×8 block gets two colours from the ZX palette,
+both "regular" or both "bright".

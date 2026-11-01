@@ -1,0 +1,17 @@
+[package]
+name = "squoosh-imagequant"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Threads are off: the quantizer runs in our own worker.
+imagequant = { version = "4.4.1", default-features = false }
+wasm-bindgen = "0.2.129"
+
+[profile.release]
+opt-level = "s"
+lto = true
