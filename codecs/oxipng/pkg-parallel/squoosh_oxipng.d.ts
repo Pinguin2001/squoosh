@@ -27,6 +27,7 @@ export interface InitOutput {
     readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;
     readonly wbg_rayon_start_worker: (a: number) => void;
     readonly memory: WebAssembly.Memory;
+    readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;

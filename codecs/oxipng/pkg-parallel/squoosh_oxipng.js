@@ -1,5 +1,5 @@
 /* @ts-self-types="./squoosh_oxipng.d.ts" */
-import { startWorkers } from './snippets/wasm-bindgen-rayon-61c530a5c67cc8eb/src/workerHelpers.js';
+import { startWorkers } from './snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.js';
 
 
 /**
@@ -74,6 +74,10 @@ export function wbg_rayon_start_worker(receiver) {
 function __wbg_get_imports(memory) {
     const import0 = {
         __proto__: null,
+        __wbg___wbindgen_is_undefined_8865fb403f8fe9d8: function(arg0) {
+            const ret = arg0 === undefined;
+            return ret;
+        },
         __wbg___wbindgen_memory_caa4a6165639c8b5: function() {
             const ret = wasm.memory;
             return ret;
@@ -85,9 +89,35 @@ function __wbg_get_imports(memory) {
         __wbg___wbindgen_throw_41e9ee4f547fc59a: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_startWorkers_c0361df760ffff94: function(arg0, arg1, arg2) {
+        __wbg_instanceof_Window_82d71df4eddf88bc: function(arg0) {
+            let result;
+            try {
+                result = arg0 instanceof Window;
+            } catch (_) {
+                result = false;
+            }
+            const ret = result;
+            return ret;
+        },
+        __wbg_startWorkers_8b582d57e92bd2d4: function(arg0, arg1, arg2) {
             const ret = startWorkers(arg0, arg1, wbg_rayon_PoolBuilder.__wrap(arg2));
             return ret;
+        },
+        __wbg_static_accessor_GLOBAL_266715b9d96ba635: function() {
+            const ret = typeof global === 'undefined' ? null : global;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+        },
+        __wbg_static_accessor_GLOBAL_THIS_10fb7dc1ae063179: function() {
+            const ret = typeof globalThis === 'undefined' ? null : globalThis;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+        },
+        __wbg_static_accessor_SELF_0b583911f537483a: function() {
+            const ret = typeof self === 'undefined' ? null : self;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+        },
+        __wbg_static_accessor_WINDOW_d7f903d1508cbdc4: function() {
+            const ret = typeof window === 'undefined' ? null : window;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
         },
         __wbindgen_init_externref_table: function() {
             const table = wasm.__wbindgen_externrefs;
@@ -110,6 +140,12 @@ const wbg_rayon_PoolBuilderFinalization = (typeof FinalizationRegistry === 'unde
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_wbg_rayon_poolbuilder_free(ptr, 1));
 
+function addToExternrefTable0(obj) {
+    const idx = wasm.__externref_table_alloc();
+    wasm.__wbindgen_externrefs.set(idx, obj);
+    return idx;
+}
+
 function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
@@ -125,6 +161,10 @@ function getUint8ArrayMemory0() {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
 }
 
 function passArray8ToWasm0(arg, malloc) {
