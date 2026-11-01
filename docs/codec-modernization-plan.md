@@ -1,7 +1,7 @@
 # Codec modernization plan
 
-Status: written 2026-11-01. Phases 1–3 are done (the app now ships 14 wasm
-files, ~11 MB); phase 4 is open.
+Status: written 2026-11-01. Phases 1–4 are done (the app ships 15 wasm
+files, ~13.5 MB); only the open questions at the end remain.
 
 ## Summary
 
@@ -25,27 +25,30 @@ files, ~11 MB); phase 4 is open.
 Together, dropping WebP v2, the two universal decoders and the non-SIMD
 variants takes the wasm the service worker caches from ~17.5 MB to ~12 MB.
 
-## What the app ships today
+## What the app shipped before, and now
 
-| Codec          | Pinned version           | Latest upstream               | Wasm files (kB)                                     |
-| -------------- | ------------------------ | ----------------------------- | --------------------------------------------------- |
-| MozJPEG        | 3.3.1 (2018)             | 4.1.1                         | enc 252                                             |
-| libavif + aom  | 1.0.1 + aom 3.7.0 (2023) | 1.4.2 (May 2026) + aom 3.15.x | dec 1,211; enc 2,818; enc_mt 2,872                  |
-| libjxl         | commit of 2022-01-18     | 0.12.0 (Jul 2026)             | dec 840; enc 1,346; enc_mt 1,358; enc_mt_simd 1,946 |
-| libwebp        | commit of 2020-11-24     | 1.6.0                         | dec 149; enc 298; enc_simd 372                      |
-| libwebp2       | experimental commit      | still experimental            | dec 459; enc 972; enc_mt 981; enc_mt_simd 1,023     |
-| OxiPNG         | 9.0                      | 10.2.1 (Sep 2026)             | 147; parallel 220                                   |
-| libimagequant  | 2.12.1                   | 4.4.1                         | 66                                                  |
-| QOI            | commit (2021)            | format is frozen              | dec 16; enc 17                                      |
-| resize (crate) | 0.5.5                    | newer releases exist          | 37                                                  |
-| hqx            | wasmboy-rs v0.1.3        | unmaintained                  | 153                                                 |
+| Codec          | Was                      | Now (after phase 4)       | Wasm files now (kB)              |
+| -------------- | ------------------------ | ------------------------- | -------------------------------- |
+| MozJPEG        | 3.3.1 (2018)             | 4.1.5                     | enc 268                          |
+| libavif + aom  | 1.0.1 + aom 3.7.0 (2023) | 1.4.2 + aom 3.15.3        | enc 2,943; enc_mt 3,019 (no dec) |
+| libjxl         | commit of 2022-01-18     | 0.12.0                    | dec 962; enc 2,596; enc_mt 2,663 |
+| libwebp        | commit of 2020-11-24     | 1.6.0                     | enc 328 (SIMD, no dec)           |
+| libwebp2       | experimental commit      | removed                   | —                                |
+| OxiPNG         | 9.0                      | 10.2.1                    | 174; parallel 234                |
+| libimagequant  | 2.12.1 (C)               | 4.4.1 (Rust crate)        | 113                              |
+| QOI            | commit (2021)            | unchanged (format frozen) | dec 14; enc 14                   |
+| resize (crate) | 0.5.5                    | 0.8.9                     | 83                               |
+| hqx            | wasmboy-rs v0.1.3        | unchanged, rebuilt        | 132                              |
 
-Toolchains: `codecs/cpp.Dockerfile` uses `emscripten/emsdk:2.0.34`,
-`codecs/rust.Dockerfile` uses Rust 1.47 with Emscripten 2.0.8 tools, and the
-Rust codecs use wasm-bindgen 0.2.38–0.2.73.
+Each phase 4 commit message has the old-vs-new size, quality and speed
+numbers.
 
-`codecs/png` (124 kB) and `codecs/visdif` (59 kB) aren't imported by the app
-any more and can be deleted.
+Originally, `codecs/cpp.Dockerfile` used `emscripten/emsdk:2.0.34`,
+`codecs/rust.Dockerfile` used Rust 1.47 with Emscripten 2.0.8 tools, and the
+Rust codecs used wasm-bindgen 0.2.38–0.2.73.
+
+`codecs/png` (124 kB) and `codecs/visdif` (59 kB), which nothing imported,
+were deleted in phase 2.
 
 ## What browsers support natively
 
@@ -132,7 +135,7 @@ Things the new toolchain needs, which phase 4 will run into again:
 - Threaded Emscripten modules no longer have a separate `.worker.js`; they
   start their threads from their own file, which Vite bundles fine.
 
-### Phase 4: Upgrade the codecs (one PR each)
+### Phase 4: Upgrade the codecs (done, one commit each)
 
 8. **MozJPEG 3.3.1 → 4.1.x.** No new UI options needed. Expect slightly
    different sizes at the same quality.
@@ -152,6 +155,14 @@ Things the new toolchain needs, which phase 4 will run into again:
     upgrading.
 14. **resize and hqx crates:** update `resize`; hqx is unmaintained, so only
     rebuild it with the new toolchain.
+
+Outcomes: MozJPEG 4.1.5 is byte-identical. libwebp 1.6 is ~1.5% smaller on
+graphics. libavif 1.4.2 gives higher PSNR, but alpha encodes ~2x slower.
+libjxl 0.12 is 2–4x faster; "slight loss" is 6–12x smaller, and the
+encoder grows to 2.6 MB. OxiPNG 10 is pixel-exact. libimagequant 4 is
+within ±5% after OxiPNG. resize 0.8.9 is byte-identical, and hqx no longer
+over-allocates 4x. JXL decoding stays wasm only where the browser can't
+decode it; encoding is always wasm.
 
 ### Verification for every codec change
 

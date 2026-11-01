@@ -95,16 +95,32 @@ them executable). Pitfalls already solved, keep them:
 - Threaded Rust needs the shared-memory link args in `codecs/oxipng/build.sh`.
 - Only SIMD builds are shipped (WebP, JPEG XL); threaded/single-threaded
   split stays because threads need cross-origin isolation.
+- libjxl 0.12 is built once with CMake (`jxl jxl_dec jxl_cms jxl_threads`).
+  The glue uses the public `encode.h`/`decode.h` API;
+  `JxlColorEncodingSetToSRGB` is not in the decoder library. Highway
+  already emits only Wasm SIMD kernels (`HWY_COMPILE_ONLY_STATIC` changes
+  nothing), so the 2.6 MB encoder is libjxl itself.
+- libimagequant 4 and resize/hqx/rotate/OxiPNG are Rust (`build-rust.sh`).
+- The pre-commit hook runs prettier, clang-format (`brew install
+clang-format`) and rustfmt; a missing formatter fails the commit.
 
 ## Verifying changes
 
-- The yardstick is squoosh.app opened **in the same browser/OS** (SVG
-  rasterization differs between Windows and macOS). Logo demo, defaults, in
-  the macOS browser pane, exact bytes: AVIF 8461, JPEG XL 20302, MozJPEG
-  18788, OxiPNG 29267, QOI 40566, WebP 14218, Browser WebP ~16.0 kB;
-  OxiPNG + reduce palette 17586, + resize 50 % Lanczos3 17554, hqx 14879.
-  Codec rebuilds without version changes must stay byte-identical. (The
-  same demo gives different sizes on Windows, e.g. OxiPNG 45.1 kB.)
+- Compare **in the same browser/OS** (SVG rasterization differs between
+  Windows and macOS). Logo demo, defaults, in the macOS browser pane, exact
+  bytes after the phase 4 upgrades: AVIF 8379, JPEG XL 23332, MozJPEG
+  18788, OxiPNG 29267, QOI 40566, WebP 14010, Browser WebP ~16.0 kB. Before
+  libimagequant 4 (squoosh.app still gives these): OxiPNG + reduce palette
+  17586, + resize 50 % Lanczos3 17554, hqx 14879. Codec rebuilds without
+  version changes must stay byte-identical. (The same demo gives different
+  sizes on Windows, e.g. OxiPNG 45.1 kB.)
+- Test on `localhost`, not `127.0.0.1`. Even there, nested workers fail
+  while the pane is hidden, so threaded codecs (AVIF/JXL mt, parallel
+  OxiPNG) hang in the app with no error; the old builds behave the same.
+  Check `*_mt.js` builds by importing them on the page's main thread.
+- Benchmark old vs new codec builds by copying the old outputs into
+  `node_modules/.squooshre-bench/` (git-ignored, served by Vite) and
+  importing both with `{ noInitialRun: true }`.
 - Drive the UI with real input events in the browser pane; Vite reloads
   the page whenever files under `codecs/` change (scripts get cut off).
 - The pane's main tab emulates dark mode, which makes the page background
@@ -114,12 +130,12 @@ them executable). Pitfalls already solved, keep them:
 
 ## Open items
 
-- Codec plan phase 4: upgrade MozJPEG 3.3.1→4.1, libwebp→1.6, libavif
-  1.0.1→1.4 / aom 3.7→3.15, libjxl (2022 commit)→0.12 (encoder glue needs a
-  rewrite), OxiPNG 9→10, libimagequant 2.12→4.x (check licence). One PR
-  each, compare output quality not just size.
+- Codec plan phase 4 is done (one commit per codec, with old-vs-new
+  numbers in each commit message). Open questions are at the end of
+  `docs/codec-modernization-plan.md`.
 - Unreproduced: a `RangeError: offset is out of bounds` in the resize worker
-  and one oversized Lanczos result, both after very large hqx resizes.
+  and one oversized Lanczos result after very large hqx resizes (hqx used
+  to over-allocate 4×; fixed, so possibly gone).
 - Not tested: Safari/Firefox after the codec rebuild, two-finger pinch on
   touch devices, the install button.
 
