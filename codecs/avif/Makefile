@@ -1,9 +1,9 @@
 # using libavif from https://github.com/AOMediaCodec/libavif
-LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.0.1.tar.gz
+LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.4.2.tar.gz
 LIBAVIF_PACKAGE = node_modules/libavif.tar.gz
 
 # using libaom from https://aomedia.googlesource.com/aom
-LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.7.0.tar.gz
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.15.3.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
 export CODEC_DIR = node_modules/libavif
@@ -14,7 +14,7 @@ override CFLAGS += "-Wno-unused-macros"
 
 # We must build libsharpyuv from a specific libwebp commit
 # See libavif/ext/libsharpyuv.cmd for more detail
-LIBWEBP_URL_WITH_SHARPYUV = https://chromium.googlesource.com/webm/libwebp/+archive/e2c85878f6a33f29948b43d3492d9cdaf801aa54.tar.gz
+LIBWEBP_URL_WITH_SHARPYUV = https://chromium.googlesource.com/webm/libwebp/+archive/v1.6.0.tar.gz
 LIBWEBP_DIR := $(CODEC_DIR)/ext/libwebp
 LIBSHARPYUV_ST := $(LIBWEBP_DIR)/build_st/libsharpyuv.a
 LIBSHARPYUV_MT := $(LIBWEBP_DIR)/build_mt/libsharpyuv.a
@@ -45,7 +45,7 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON"
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LIBSHARPYUV=LOCAL -DAVIF_LIBYUV=OFF"
 
 # MT-Encoding
 # We need to run the ST and MT tasks sequentially to avoid conflicts with the copy of libsharpyuv in the build directory
@@ -60,7 +60,7 @@ $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMake
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LIBSHARPYUV=LOCAL -DAVIF_LIBYUV=OFF" \
 		OUT_FLAGS="-pthread"
 
 # LIBAOM EXTRACTION SECTION
