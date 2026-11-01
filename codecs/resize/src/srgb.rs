@@ -1,17 +1,3 @@
-pub trait Clamp: std::cmp::PartialOrd + Sized {
-    fn clamp(self, min: Self, max: Self) -> Self {
-        if self.lt(&min) {
-            min
-        } else if self.gt(&max) {
-            max
-        } else {
-            self
-        }
-    }
-}
-
-impl Clamp for f32 {}
-
 pub fn srgb_to_linear(v: f32) -> f32 {
     if v < 0.04045 {
         v / 12.92

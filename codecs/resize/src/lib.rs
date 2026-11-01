@@ -1,27 +1,11 @@
-extern crate cfg_if;
-extern crate resize;
-extern crate wasm_bindgen;
-
-mod utils;
-
-use cfg_if::cfg_if;
 use resize::Pixel;
 use resize::Type;
+use rgb::FromSlice;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 
 mod srgb;
-use srgb::{linear_to_srgb, Clamp};
-
-cfg_if! {
-    // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-    // allocator.
-    if #[cfg(feature = "wee_alloc")] {
-        extern crate wee_alloc;
-        #[global_allocator]
-        static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-    }
-}
+use srgb::linear_to_srgb;
 
 include!("./lut.inc");
 
@@ -57,7 +41,6 @@ fn alpha_multiplier_funcs(
 }
 
 #[wasm_bindgen]
-#[no_mangle]
 pub fn resize(
     input_image: Vec<u8>,
     input_width: usize,
@@ -67,7 +50,7 @@ pub fn resize(
     typ_idx: usize,
     premultiply: bool,
     color_space_conversion: bool,
-) -> Clamped<Vec<u8>> {
+) -> Result<Clamped<Vec<u8>>, JsError> {
     let typ = match typ_idx {
         0 => Type::Triangle,
         1 => Type::Catrom,
@@ -83,16 +66,17 @@ pub fn resize(
     // If both options are false, there is no preprocessing on the pixel values
     // and we can skip the loop.
     if !premultiply && !color_space_conversion {
+        // RGBA8 scales the channels independently, like the old Pixel::RGBA.
         let mut resizer = resize::new(
             input_width,
             input_height,
             output_width,
             output_height,
-            Pixel::RGBA,
+            Pixel::RGBA8,
             typ,
-        );
-        resizer.resize(input_image.as_slice(), output_image.as_mut_slice());
-        return Clamped(output_image);
+        )?;
+        resizer.resize(input_image.as_rgba(), output_image.as_rgba_mut())?;
+        return Ok(Clamped(output_image));
     }
 
     // Otherwise, we convert to f32 images to keep the
@@ -121,11 +105,11 @@ pub fn resize(
         output_height,
         Pixel::RGBAF32,
         typ,
-    );
+    )?;
     resizer.resize(
-        preprocessed_input_image.as_slice(),
-        unprocessed_output_image.as_mut_slice(),
-    );
+        preprocessed_input_image.as_rgba(),
+        unprocessed_output_image.as_rgba_mut(),
+    )?;
 
     for i in 0..num_output_pixels {
         for j in 0..3 {
@@ -139,5 +123,5 @@ pub fn resize(
             .clamp(0.0, 255.0) as u8;
     }
 
-    return Clamped(output_image);
+    Ok(Clamped(output_image))
 }
