@@ -2,6 +2,7 @@ import { expose } from 'comlink';
 import jxlDecode from '@/features/decoders/jxl/worker';
 import qoiDecode from '@/features/decoders/qoi/worker';
 import avifEncode from '@/features/encoders/avif/worker';
+import jpegliEncode from '@/features/encoders/jpegli/worker';
 import jxlEncode from '@/features/encoders/jxl/worker';
 import mozjpegEncode from '@/features/encoders/mozJPEG/worker';
 import oxipngEncode from '@/features/encoders/oxiPNG/worker';
@@ -26,6 +27,7 @@ const api = {
   jxlDecode: timed('jxlDecode', jxlDecode),
   qoiDecode: timed('qoiDecode', qoiDecode),
   avifEncode: timed('avifEncode', avifEncode),
+  jpegliEncode: timed('jpegliEncode', jpegliEncode),
   jxlEncode: timed('jxlEncode', jxlEncode),
   mozjpegEncode: timed('mozjpegEncode', mozjpegEncode),
   oxipngEncode: timed('oxipngEncode', oxipngEncode),

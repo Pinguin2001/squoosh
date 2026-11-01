@@ -31,6 +31,7 @@ variants takes the wasm the service worker caches from ~17.5 MB to ~12 MB.
 | -------------- | ------------------------ | ------------------------- | -------------------------------- |
 | MozJPEG        | 3.3.1 (2018)             | 4.1.5                     | enc 268                          |
 | libavif + aom  | 1.0.1 + aom 3.7.0 (2023) | 1.4.2 + aom 3.15.3        | enc 2,943; enc_mt 3,019 (no dec) |
+| jpegli         | —                        | new (google/jpegli main)  | enc 172                          |
 | libjxl         | commit of 2022-01-18     | 0.12.0                    | dec 962; enc 2,596; enc_mt 2,663 |
 | libwebp        | commit of 2020-11-24     | 1.6.0                     | enc 328 (SIMD, no dec)           |
 | libwebp2       | experimental commit      | removed                   | —                                |

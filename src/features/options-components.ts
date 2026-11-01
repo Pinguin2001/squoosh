@@ -2,6 +2,7 @@ import type { Component } from 'vue';
 import type { EncoderType } from './registry';
 import AvifOptions from './encoders/avif/Options.vue';
 import BrowserQualityOptions from './encoders/BrowserQualityOptions.vue';
+import JpegliOptions from './encoders/jpegli/Options.vue';
 import JxlOptions from './encoders/jxl/Options.vue';
 import MozJpegOptions from './encoders/mozJPEG/Options.vue';
 import OxiPngOptions from './encoders/oxiPNG/Options.vue';
@@ -17,6 +18,7 @@ export const encoderOptionsComponents: Partial<Record<EncoderType, Component>> =
     browserAVIF: BrowserQualityOptions,
     browserJPEG: BrowserQualityOptions,
     browserWebP: BrowserQualityOptions,
+    jpegli: JpegliOptions,
     jxl: JxlOptions,
     mozJPEG: MozJpegOptions,
     oxiPNG: OxiPngOptions,

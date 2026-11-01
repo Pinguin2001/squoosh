@@ -9,6 +9,7 @@ const methodNames = [
   'jxlDecode',
   'qoiDecode',
   'avifEncode',
+  'jpegliEncode',
   'jxlEncode',
   'mozjpegEncode',
   'oxipngEncode',

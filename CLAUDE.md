@@ -110,6 +110,10 @@ them executable). Pitfalls already solved, keep them:
   `JxlColorEncodingSetToSRGB` is not in the decoder library. Highway
   already emits only Wasm SIMD kernels (`HWY_COMPILE_ONLY_STATIC` changes
   nothing), so the 2.6 MB encoder is libjxl itself.
+- Jpegli (`codecs/jpegli`) is pinned to a google/jpegli commit (no
+  releases yet) and only builds `jpegli-static` + `hwy`, single-threaded.
+  XYB mode isn't exposed: it needs the caller to convert colours and write
+  the ICC profile (see jpegli's `lib/extras/enc/jpegli.cc`).
 - libimagequant 4 and resize/hqx/rotate/OxiPNG are Rust (`build-rust.sh`).
 - The pre-commit hook runs prettier, clang-format (`brew install
 clang-format`) and rustfmt; a missing formatter fails the commit.
@@ -118,8 +122,8 @@ clang-format`) and rustfmt; a missing formatter fails the commit.
 
 - Compare **in the same browser/OS** (SVG rasterization differs between
   Windows and macOS). Logo demo, defaults, in the macOS browser pane, exact
-  bytes after the phase 4 upgrades: AVIF 8379, JPEG XL 23332, MozJPEG
-  18788, OxiPNG 29267, QOI 40566, WebP 14010, Browser WebP ~16.0 kB. Before
+  bytes after the phase 4 upgrades: AVIF 8379, Jpegli 22093, JPEG XL 23332,
+  MozJPEG 18788, OxiPNG 29267, QOI 40566, WebP 14010, Browser WebP ~16.0 kB. Before
   libimagequant 4 (squoosh.app still gives these): OxiPNG + reduce palette
   17586, + resize 50 % Lanczos3 17554, hqx 14879. Codec rebuilds without
   version changes must stay byte-identical. (The same demo gives different

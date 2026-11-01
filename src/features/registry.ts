@@ -5,6 +5,7 @@ import * as browserAVIF from './encoders/browserAVIF/meta';
 import * as browserJPEG from './encoders/browserJPEG/meta';
 import * as browserPNG from './encoders/browserPNG/meta';
 import * as browserWebP from './encoders/browserWebP/meta';
+import * as jpegli from './encoders/jpegli/meta';
 import * as jxl from './encoders/jxl/meta';
 import * as mozJPEG from './encoders/mozJPEG/meta';
 import * as oxiPNG from './encoders/oxiPNG/meta';
@@ -64,6 +65,9 @@ export const encoderMap = {
   browserJPEG: defineBrowserEncoder(browserJPEG),
   browserPNG: defineBrowserEncoder(browserPNG),
   browserWebP: defineBrowserEncoder(browserWebP),
+  jpegli: defineEncoder(jpegli, (signal, bridge, data, options) =>
+    bridge.jpegliEncode(signal, data, options),
+  ),
   jxl: defineEncoder(jxl, (signal, bridge, data, options) =>
     bridge.jxlEncode(signal, data, options),
   ),
