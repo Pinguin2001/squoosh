@@ -1,4 +1,4 @@
-CODEC_URL = https://github.com/webmproject/libwebp/archive/d2e245ea9e959a5a79e1db0ed2085206947e98f2.tar.gz
+CODEC_URL = https://github.com/webmproject/libwebp/archive/v1.6.0.tar.gz
 CODEC_DIR = node_modules/libwebp
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/simd
@@ -13,7 +13,7 @@ all: $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/webp_enc.o
-enc/webp_enc.js: $(CODEC_SIMD_BUILD_DIR)/libwebp.a
+enc/webp_enc.js: $(CODEC_SIMD_BUILD_DIR)/libwebp.a $(CODEC_SIMD_BUILD_DIR)/libsharpyuv.a
 
 $(OUT_JS):
 	$(LD) \
@@ -34,11 +34,17 @@ $(OUT_JS):
 %/libwebp.a: %/Makefile
 	$(MAKE) -C $(@D)
 
+# Built along with libwebp, which needs it since 1.3.
+%/libsharpyuv.a: %/libwebp.a
+	@test -f $@
+
 # Every supported browser has Wasm SIMD, so there is only a SIMD build.
 # Everything is compiled and linked with it (libwebp uses it through its SSE
 # code), otherwise link-time optimization drops the SIMD code paths.
 $(CODEC_SIMD_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWEBP_ENABLE_SIMD=1
-$(CODEC_SIMD_BUILD_DIR)/Makefile: CFLAGS+=-msimd128 -msse4.1
+# libwebp's CMake check only detects SSE4.1 under Emscripten, but its SSE4.1
+# code needs the SSE2 helpers too.
+$(CODEC_SIMD_BUILD_DIR)/Makefile: CFLAGS+=-msimd128 -msse4.1 -DWEBP_HAVE_SSE2
 enc/webp_enc.js: LDFLAGS+=-msimd128
 
 %/Makefile: $(CODEC_DIR)/CMakeLists.txt
