@@ -169,8 +169,8 @@ async function onPasteClick() {
         <img
           class="logo"
           :src="logoWithText"
-          alt="Squoosh"
-          width="539"
+          alt="SquooshRE"
+          width="638"
           height="162"
         />
       </h1>
@@ -259,7 +259,7 @@ async function onPasteClick() {
             <div class="info-text-wrapper">
               <h2 class="info-title">Small</h2>
               <p class="info-caption">
-                Smaller images mean faster load times. Squoosh can reduce file
+                Smaller images mean faster load times. SquooshRE can reduce file
                 size and maintain high quality.
               </p>
             </div>
@@ -310,7 +310,7 @@ async function onPasteClick() {
               <h2 class="info-title">Secure</h2>
               <p class="info-caption">
                 Worried about privacy? Images never leave your device since
-                Squoosh does all the work locally.
+                SquooshRE does all the work locally.
               </p>
             </div>
             <div class="info-img-wrapper">
@@ -401,7 +401,7 @@ async function onPasteClick() {
 
 .logo {
   transform: translate(-1%, 0);
-  width: 189px;
+  width: 224px;
   height: auto;
 }
 

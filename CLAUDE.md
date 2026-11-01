@@ -1,6 +1,7 @@
-# Squoosh (Pinguin2001 fork)
+# SquooshRE (fork of Squoosh)
 
-Image compression web app. This fork rewrote the UI from Preact + Rollup to
+Image compression web app, renamed SquooshRE (the logo's pink "RE" is Outfit
+Bold, OFL; "Squoosh" stays in the original Google Sans subset). This fork rewrote the UI from Preact + Rollup to
 **Vue 3 + Vite + TypeScript** (merged into `dev` in November 2026) and is
 modernizing the codecs. `dev` is the main branch. Owner: Julian (`Pinguin2001` on GitHub, remote
 `origin`; `upstream` is GoogleChromeLabs/squoosh and is never pushed to).

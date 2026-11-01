@@ -12,7 +12,7 @@ files, ~11 MB); phase 4 is open.
   in browsers but isn't universal yet, so its wasm decoder stays as a lazy
   fallback for now.
 - **Encoding can't move to the browser in general.** Browsers only encode
-  PNG, JPEG and (not everywhere) WebP, with a single quality knob. Squoosh's
+  PNG, JPEG and (not everywhere) WebP, with a single quality knob. SquooshRE's
   point is the codec settings (MozJPEG trellis, OxiPNG effort, AVIF/JXL
   tuning) and identical output in every browser, so the wasm encoders stay.
   What native encoding is good for: extra "Browser …" encoders, shown only

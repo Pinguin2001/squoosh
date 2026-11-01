@@ -36,8 +36,8 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
       },
       manifest: {
-        name: 'Squoosh',
-        short_name: 'Squoosh',
+        name: 'SquooshRE',
+        short_name: 'SquooshRE',
         description:
           'Compress and compare images with different codecs, right in your browser.',
         start_url: '/?utm_medium=PWA&utm_source=launcher',

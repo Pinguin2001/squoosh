@@ -1,16 +1,16 @@
-# [Squoosh]!
+# SquooshRE
 
-[Squoosh] is an image compression web app that reduces image sizes through numerous formats.
+SquooshRE is an image compression web app that reduces image sizes through numerous formats. It is a fork of [Squoosh] by Google Chrome Labs, rebuilt on Vue 3 and Vite with updated codecs.
 
 # Privacy
 
-Squoosh does not send your image to a server. All image compression processes locally.
+SquooshRE does not send your image to a server. All image compression processes locally.
 
-Squoosh does not use analytics or collect any data about you.
+SquooshRE does not use analytics or collect any data about you.
 
 # Developing
 
-To develop for Squoosh:
+To develop for SquooshRE:
 
 1. Install [Bun](https://bun.sh) (1.3 or later)
 1. Clone the repository
@@ -36,6 +36,6 @@ they plug into the UI.
 
 # Contributing
 
-Squoosh is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
+SquooshRE is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
 
 [squoosh]: https://squoosh.app

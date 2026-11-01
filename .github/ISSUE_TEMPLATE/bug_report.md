@@ -31,7 +31,7 @@ A clear and concise description of what you expected to happen.
 Please attach original and output images (you can drag & drop to attach).
 
 - Original image
-- Output image from Squoosh
+- Output image from SquooshRE
 
 **Additional context, screenshots, screencasts**
 Add any other context about the problem here.
